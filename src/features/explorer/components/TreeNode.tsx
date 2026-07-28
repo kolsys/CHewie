@@ -1,5 +1,5 @@
 // TreeNode.tsx
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -45,6 +45,7 @@ interface TreeNodeProps {
   searchTerm: string;
   parentDatabaseName?: string;
   refreshData: () => void;
+  autoExpand?: boolean;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -53,6 +54,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   searchTerm,
   parentDatabaseName,
   refreshData,
+  autoExpand,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -70,7 +72,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     openCreateDatabaseModal,
     currentDatabase,
     setCurrentDatabase,
+    setExplorerRevealPath,
   } = useAppStore();
+
+  useEffect(() => {
+    if (autoExpand) {
+      setIsOpen(true);
+      // We're the reveal target — consume it so it doesn't re-trigger if
+      // this same database re-renders later (e.g. after a manual collapse).
+      setExplorerRevealPath(null);
+    }
+  }, [autoExpand]);
 
   const toggleOpen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -362,6 +374,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <div
             className={`flex items-center py-1 px-2 hover:bg-secondary hover:rounded-md cursor-pointer truncate
             ${level > 0 ? "ml-4" : ""}`}
+            onMouseDown={(e) => {
+              // Cmd/Ctrl+click is repurposed below to open "Query Table" —
+              // without this, the browser's native modifier-click handling
+              // ends up selecting the tree's text instead.
+              if (e.metaKey || e.ctrlKey) {
+                e.preventDefault();
+              }
+            }}
             onClick={(e) => {
               if (
                 node.type === "table" ||
@@ -370,10 +390,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 node.type === "materialized_view"
               ) {
                 e.stopPropagation();
-                if (parentDatabaseName) {
-                  openInfoTab(parentDatabaseName, node.name);
-                } else {
+                if (!parentDatabaseName) {
                   toast.error("Parent database name is undefined.");
+                } else if (e.metaKey || e.ctrlKey) {
+                  handleQueryData(parentDatabaseName, node.name)();
+                } else {
+                  openInfoTab(parentDatabaseName, node.name);
                 }
               } else {
                 toggleOpen(e);
@@ -413,7 +435,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 />
               )}
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="icon" variant="ghost" className="h-6 w-6">

@@ -72,6 +72,7 @@ export interface QueryResult {
     bytes_read: number;
   };
   rows?: number;
+  totals?: Record<string, any>;
   error?: string | null;
 }
 
@@ -110,6 +111,9 @@ interface ExplorerState {
   selectedTableForDelete: string | null;
   isUploadFileModalOpen: boolean;
   selectedDatabaseForUpload: string;
+  // Set to auto-expand a database (and reveal its table) in the Explorer
+  // tree, e.g. right after opening a table info tab from a share link.
+  explorerRevealPath: { database: string; table?: string } | null;
 }
 
 interface AdminState {
@@ -152,6 +156,7 @@ export interface AppState
   openCreateDatabaseModal: () => void;
   closeUploadFileModal: () => void;
   openUploadFileModal: (database: string) => void;
+  setExplorerRevealPath: (path: { database: string; table?: string } | null) => void;
 
   checkIsAdmin: () => Promise<boolean>;
   activateSavedQueries: () => Promise<void>;

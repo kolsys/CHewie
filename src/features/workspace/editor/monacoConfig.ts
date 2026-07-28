@@ -291,6 +291,35 @@ function parseQueryContext(
   return { database, table, isTypingDatabase };
 }
 
+// Comprehensive ClickHouse SQL keyword list (sourced from ClickHouse's own
+// SQL reference/grammar), grouped by area. The Monarch tokenizer matches one
+// word at a time, so multi-word clauses appear here as separate words.
+const CLICKHOUSE_KEYWORDS = [
+  // Query clauses / modifiers
+  "SELECT", "FROM", "WHERE", "PREWHERE", "GROUP", "BY", "WITH", "TOTALS",
+  "ROLLUP", "CUBE", "HAVING", "ORDER", "LIMIT", "OFFSET", "FETCH", "SAMPLE",
+  "ARRAY", "JOIN", "INNER", "LEFT", "RIGHT", "FULL", "OUTER", "CROSS", "ANY",
+  "ALL", "ASOF", "SEMI", "ANTI", "ON", "USING", "UNION", "EXCEPT",
+  "INTERSECT", "DISTINCT", "INTO", "OUTFILE", "FORMAT", "SETTINGS",
+  "WINDOW", "OVER", "QUALIFY", "FINAL",
+  // DML
+  "INSERT", "VALUES", "UPDATE", "SET", "DELETE",
+  // DDL
+  "CREATE", "ALTER", "DROP", "ATTACH", "DETACH", "RENAME", "EXCHANGE",
+  "TRUNCATE", "OPTIMIZE", "DEDUPLICATE", "FREEZE", "UNFREEZE", "TABLE",
+  "TABLES", "DATABASE", "DATABASES", "VIEW", "MATERIALIZED", "LIVE",
+  "DICTIONARY", "INDEX", "FUNCTION", "CLUSTER", "ENGINE", "PARTITION",
+  "PRIMARY", "KEY", "TTL", "CODEC", "DEFAULT", "ALIAS", "COMMENT",
+  "CONSTRAINT", "CHECK", "POPULATE", "TO", "AS",
+  // Access / admin
+  "GRANT", "REVOKE", "ROLE", "POLICY", "PROFILE", "QUOTA", "USER", "SHOW",
+  "DESCRIBE", "DESC", "USE", "EXPLAIN", "SYSTEM", "KILL", "WATCH",
+  // Expressions / operators-as-words
+  "AND", "OR", "XOR", "NOT", "IN", "BETWEEN", "LIKE", "ILIKE", "GLOBAL",
+  "EXISTS", "IS", "NULL", "TRUE", "FALSE", "CASE", "WHEN", "THEN", "ELSE",
+  "END", "CAST", "EXTRACT", "INTERVAL", "ASC",
+];
+
 // Initialize Monaco editor with ClickHouse SQL language features
 export const initializeMonacoGlobally = async () => {
   if (isInitialized) return;
@@ -317,28 +346,11 @@ export const initializeMonacoGlobally = async () => {
   // Set monarch tokens provider for SQL syntax highlighting
   monaco.languages.setMonarchTokensProvider("sql", {
     ignoreCase: true,
-    keywords: [
-      "SELECT",
-      "FROM",
-      "WHERE",
-      "ORDER BY",
-      "GROUP BY",
-      "LIMIT",
-      "JOIN",
-      "INSERT",
-      "UPDATE",
-      "DELETE",
-      "CREATE",
-      "ALTER",
-      "DROP",
-      "TABLE",
-      "INDEX",
-      "VIEW",
-      "TRIGGER",
-      "PROCEDURE",
-      "FUNCTION",
-      "DATABASE",
-    ],
+    // Comprehensive ClickHouse SQL keyword surface. The tokenizer below only
+    // ever matches one identifier word at a time, so multi-word clauses
+    // (GROUP BY, ORDER BY, LIMIT BY, PRIMARY KEY, ...) are listed here as
+    // their individual words rather than as combined phrases.
+    keywords: CLICKHOUSE_KEYWORDS,
     operators: [
       "=",
       ">",

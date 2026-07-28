@@ -6,6 +6,7 @@ import { useTheme } from "@/components/common/theme-provider";
 import EmptyQueryResult from "@/features/workspace/components/EmptyQueryResult";
 import StatisticsDisplay from "@/features/workspace/components/StatisticsDisplay";
 import DownloadDialog from "@/components/common/DownloadDialog";
+import { handleGridCopy } from "@/lib/gridClipboard";
 
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ interface QueryResult {
   meta?: any[];
   data?: any[];
   rows?: number;
+  totals?: Record<string, any>;
   statistics?: {
     elapsed: number;
     rows_read: number;
@@ -26,21 +28,18 @@ interface AgTableProps {
   height?: number | string; // container height
 }
 
-// Format complex values for display in the grid
-const formatCellValue = (value: any): string => {
-  if (value === null || value === undefined) {
-    return "<em>null</em>";
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value, null, 2);
-  }
-  return String(value);
-};
-
-// Cell renderer that can handle HTML content
+// Cell renderer that formats objects/null specially and renders everything
+// else as plain text (avoids dangerouslySetInnerHTML, which used to run every
+// cell value through the browser's HTML parser).
 const CustomCellRenderer = (props: ICellRendererParams) => {
-  const formattedValue = formatCellValue(props.value);
-  return <div dangerouslySetInnerHTML={{ __html: formattedValue }} />;
+  const { value } = props;
+  if (value === null || value === undefined) {
+    return <em>null</em>;
+  }
+  if (typeof value === "object") {
+    return <span style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(value, null, 2)}</span>;
+  }
+  return <>{String(value)}</>;
 };
 
 export default function AgTable({ data, height = "350px" }: AgTableProps) {
@@ -92,6 +91,10 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
     typeof height === "number" ? `${height}px` : height || "350px";
   const isFull = containerHeight === "100%";
 
+  const exportData = data.totals
+    ? [...(data.data || []), data.totals]
+    : data.data || [];
+
   return (
     <Tabs defaultValue="results" className="h-full flex flex-col">
       <TabsList className="w-full shrink-0">
@@ -108,21 +111,27 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
 
       <TabsContent value="results" className="flex-1 min-h-0" style={{ height: 'auto' }}>
         <div className="flex items-center justify-end pb-2">
-          <DownloadDialog data={data.data || []} />
+          <DownloadDialog data={exportData} />
         </div>
         <div
           className={`ag-theme-balham w-full overflow-auto ${isFull ? 'h-full flex-1 min-h-0' : ''}`}
           style={isFull ? undefined : { height: containerHeight }}
+          onCopy={handleGridCopy}
         >
           <AgGridReact
               rowData={data.data || []}
               columnDefs={dataColumnDefs}
               defaultColDef={defaultColDef}
+              pinnedBottomRowData={data.totals ? [data.totals] : undefined}
+              getRowStyle={(params) =>
+                params.node.rowPinned ? { fontWeight: "bold" } : undefined
+              }
               modules={[AllCommunityModule]}
               theme={gridTheme}
               pagination={true}
               paginationPageSize={100}
               enableCellTextSelection={true}
+              suppressRowVirtualisation={true}
               animateRows={true}
               domLayout="normal"
             />
@@ -139,6 +148,7 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
         <div
           className={`ag-theme-balham w-full overflow-auto ${isFull ? 'h-full flex-1 min-h-0' : ''}`}
           style={isFull ? undefined : { height: containerHeight }}
+          onCopy={handleGridCopy}
         >
           <AgGridReact
               rowData={data.meta || []}

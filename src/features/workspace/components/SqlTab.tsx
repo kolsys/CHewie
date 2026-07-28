@@ -21,6 +21,7 @@ import DownloadDialog, {
 } from "@/components/common/DownloadDialog";
 import EmptyQueryResult from "./EmptyQueryResult";
 import StatisticsDisplay from "./StatisticsDisplay";
+import { handleGridCopy } from "@/lib/gridClipboard";
 
 // Store
 import useAppStore from "@/store";
@@ -34,21 +35,18 @@ interface IRow {
   [key: string]: any;
 }
 
-// Format complex values for display in the grid
-const formatCellValue = (value: any): string => {
-  if (value === null || value === undefined) {
-    return "<em>null</em>";
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value, null, 2);
-  }
-  return String(value);
-};
-
-// Cell renderer that can handle HTML content
+// Cell renderer that formats objects/null specially and renders everything
+// else as plain text (avoids dangerouslySetInnerHTML, which used to run every
+// cell value through the browser's HTML parser).
 const CustomCellRenderer = (props: ICellRendererParams) => {
-  const formattedValue = formatCellValue(props.value);
-  return <div dangerouslySetInnerHTML={{ __html: formattedValue }} />;
+  const { value } = props;
+  if (value === null || value === undefined) {
+    return <em>null</em>;
+  }
+  if (typeof value === "object") {
+    return <span style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(value, null, 2)}</span>;
+  }
+  return <>{String(value)}</>;
 };
 
 /**
@@ -178,16 +176,21 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1">
+        <div className="flex-1" onCopy={handleGridCopy}>
           <AgGridReact
             rowData={rowData}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
+            pinnedBottomRowData={tab?.result?.totals ? [tab.result.totals] : undefined}
+            getRowStyle={(params) =>
+              params.node.rowPinned ? { fontWeight: "bold" } : undefined
+            }
             modules={[AllCommunityModule]}
             theme={gridTheme}
             pagination={true}
             paginationPageSize={100}
             enableCellTextSelection={true}
+            suppressRowVirtualisation={true}
             animateRows={true}
             suppressMovableColumns={false}
           />
@@ -201,7 +204,7 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1">
+        <div className="flex-1" onCopy={handleGridCopy}>
           <AgGridReact
             rowData={tab.result.meta}
             columnDefs={[
@@ -240,7 +243,14 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
             {hasData && (
               <div className="ml-2 text-muted-foreground items-center flex">
                 ({tab?.result.data.length} rows)
-                <DownloadDialog data={tab?.result.data} onExport={handleNativeExport} />
+                <DownloadDialog
+                  data={
+                    tab?.result?.totals
+                      ? [...tab.result.data, tab.result.totals]
+                      : tab?.result.data
+                  }
+                  onExport={handleNativeExport}
+                />
               </div>
             )}
           </TabsTrigger>

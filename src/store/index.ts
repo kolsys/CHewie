@@ -508,6 +508,7 @@ const useAppStore = create<AppState>()(
                 bytes_read: 0,
               },
               rows: jsonResult.rows || 0,
+              totals: jsonResult.totals || undefined,
               error: null,
             };
             if (tabId)
@@ -730,6 +731,8 @@ const useAppStore = create<AppState>()(
         selectedDatabaseForDelete: null,
         selectedTableForDelete: null,
         selectedDatabaseForUpload: "",
+        explorerRevealPath: null,
+        setExplorerRevealPath: (path) => set({ explorerRevealPath: path }),
 
         /**
          * Fetches database and table information from ClickHouse

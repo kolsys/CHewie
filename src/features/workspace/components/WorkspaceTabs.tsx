@@ -42,7 +42,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { hashHost } from "@/lib/hostHash";
 
 interface Tab {
   id: string;
@@ -156,8 +157,18 @@ function SortableTab({ tab, isActive, onActivate }: SortableTabProps) {
 }
 
 function WorkspaceTabs() {
-  const { tabs, activeTab, addTab, setActiveTab, moveTab, closeAllTabs } =
-    useAppStore();
+  const {
+    tabs,
+    activeTab,
+    addTab,
+    setActiveTab,
+    moveTab,
+    closeAllTabs,
+    credential,
+    savedConnections,
+    switchConnection,
+    setExplorerRevealPath,
+  } = useAppStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -167,33 +178,67 @@ function WorkspaceTabs() {
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const database = searchParams.get("database") || "";
     const table = searchParams.get("table") || "";
-    if (database || table) {
-      // look if the tab already exists
-      const existingTab = tabs.find(
-        (tab) =>
-          tab.type === "information" &&
-          typeof tab.content === "object" &&
-          tab.content.database === database &&
-          tab.content.table === table
-      );
-      if (existingTab) {
-        setActiveTab(existingTab.id);
-      } else {
-        addTab({
-          id: genTabId(),
-          title: `Information: ${database || table}`,
-          type: "information",
-          content: { database, table },
-        });
-      }
+    if (!database && !table) return;
 
-      // Clean up URL parameters
-      setSearchParams({}, { replace: true });
+    const cid = searchParams.get("cid");
+    if (cid) {
+      const isActiveConnection =
+        !!credential?.url && hashHost(credential.url) === cid;
+
+      if (!isActiveConnection) {
+        const match = savedConnections.find(
+          (c) => hashHost(c.credential.url) === cid
+        );
+
+        if (!match) {
+          // The link points at a connection we don't have at all — send
+          // the user straight to where they can add/check connections
+          // instead of guessing at any data. The banner is rendered by the
+          // Settings page itself, driven by this navigation state.
+          setSearchParams({}, { replace: true });
+          navigate("/settings", {
+            replace: true,
+            state: { shareLinkConnectionNotFound: true },
+          });
+          return;
+        }
+
+        // We have the right connection saved, just not active — switch to
+        // it and let the next mount (Routes remounts on connection change)
+        // re-process this same URL once it's actually the active one.
+        switchConnection(match.id);
+        return;
+      }
     }
+
+    setExplorerRevealPath({ database, table });
+
+    // look if the tab already exists
+    const existingTab = tabs.find(
+      (tab) =>
+        tab.type === "information" &&
+        typeof tab.content === "object" &&
+        tab.content.database === database &&
+        tab.content.table === table
+    );
+    if (existingTab) {
+      setActiveTab(existingTab.id);
+    } else {
+      addTab({
+        id: genTabId(),
+        title: `Information: ${database || table}`,
+        type: "information",
+        content: { database, table },
+      });
+    }
+
+    // Clean up URL parameters
+    setSearchParams({}, { replace: true });
   }, [searchParams, tabs]);
 
   const addNewCodeTab = useCallback(() => {

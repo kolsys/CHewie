@@ -15,7 +15,10 @@ A modern, feature-rich web interface for ClickHouse databases. CH-UI provides an
 - **🗄️ Current Database Selection**: Double-click a database in the Explorer to make it the default for unqualified table names (`FROM my_table` instead of `FROM db.my_table`) — reflected in the editor and followed by autocomplete.
 - **📤 Native ClickHouse Export Formats**: Export query results in any of ClickHouse's native output formats — CSV, TabSeparated, the JSON family, SQLInsert, Markdown, Avro, Parquet, and more — streamed directly from the server.
 - **📜 Universal Logs Page**: Browse any `system.*_log` table available on the connected server (not just a fixed one), with curated views for the common ones and a generic viewer for the rest.
-- **⚡ Responsive SQL Editor**: Debounced persistence keeps typing smooth even with large queries, with case-insensitive syntax highlighting.
+- **⚡ Responsive SQL Editor**: Debounced persistence keeps typing smooth even with large queries, with case-insensitive syntax highlighting and a comprehensive ClickHouse keyword list.
+- **Σ `WITH TOTALS` Support**: Totals rows now render as a pinned, bold row at the bottom of the results grid and are included in CSV/JSON/clipboard exports.
+- **📋 Clipboard-Friendly Results Grid**: Select a range of rows and copy — pasting into Google Sheets/Docs (or Excel) now lands in proper columns instead of a single cell, with reliable multi-row text selection on large result sets.
+- **⌨️ Faster Table Navigation**: Cmd-click (macOS) / Ctrl-click (Windows/Linux) a table in the Explorer to jump straight into a `SELECT *` query tab, skipping the info page.
 
 ## 🌟 Key Features
 

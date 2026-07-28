@@ -8,8 +8,6 @@ import {
   Code,
   ChevronRight,
   Table,
-  AlertCircle,
-  Share,
   Share2,
 } from "lucide-react";
 import useAppStore from "@/store";
@@ -23,6 +21,7 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getAppBasePath } from "@/lib/basePath";
+import { hashHost } from "@/lib/hostHash";
 
 interface InfoTabProps {
   database: string;
@@ -52,13 +51,13 @@ interface TableData {
 
 const InfoTab: React.FC<InfoTabProps> = ({ database, tableName }) => {
   const [searchParams] = useSearchParams();
-  const { runQuery } = useAppStore();
+  const { runQuery, credential } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DatabaseData | TableData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isRefreshing, setIsRefreshing] = useState(false);
- 
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -272,6 +271,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ database, tableName }) => {
             params.append("table", tableName);
           }
           params.append("tab", activeTab);
+          params.append("cid", hashHost(credential.url));
           const url = `${window.location.origin}${getAppBasePath()}?${params.toString()}`;
           navigator.clipboard.writeText(url);
           toast.success("URL copied to clipboard");
@@ -290,7 +290,6 @@ const InfoTab: React.FC<InfoTabProps> = ({ database, tableName }) => {
 
       {error && !loading && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>

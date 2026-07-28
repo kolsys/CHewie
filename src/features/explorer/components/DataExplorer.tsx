@@ -45,7 +45,23 @@ const DatabaseExplorer: React.FC = () => {
     openUploadFileModal,
     checkSavedQueriesStatus,
     fetchSavedQueries,
+    explorerRevealPath,
+    setExplorerRevealPath,
   } = useAppStore();
+
+  // TreeNode itself clears explorerRevealPath once it actually applies
+  // autoExpand (see TreeNode's own effect) — that only happens once the
+  // matching database has loaded into `dataBaseExplorer`. This is just the
+  // fallback: if the target database never shows up at all (e.g. it was
+  // dropped, or the link is stale), clear it once loading has settled so it
+  // doesn't linger and force-open a same-named database that appears later.
+  useEffect(() => {
+    if (!explorerRevealPath || isLoadingDatabase) return;
+    const stillExists = dataBaseExplorer.some(
+      (node) => node.name === explorerRevealPath.database
+    );
+    if (!stillExists) setExplorerRevealPath(null);
+  }, [explorerRevealPath, isLoadingDatabase, dataBaseExplorer, setExplorerRevealPath]);
 
   const updatedSavedQueriesTrigger = useAppStore(state => state.updatedSavedQueriesTrigger);
 
@@ -223,6 +239,7 @@ const DatabaseExplorer: React.FC = () => {
                   searchTerm={searchTerm}
                   parentDatabaseName={node.name}
                   refreshData={refreshDatabases}
+                  autoExpand={explorerRevealPath?.database === node.name}
                   key={node.name}
                 />
               ))

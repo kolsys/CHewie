@@ -58,7 +58,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import useAppStore from "@/store";
 import { reinitializeMonacoClient } from "@/features/workspace/editor/monacoConfig";
 import {
@@ -183,6 +183,11 @@ export default function SettingsPage() {
   );
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const shareLinkConnectionNotFound = Boolean(
+    (location.state as { shareLinkConnectionNotFound?: boolean } | null)
+      ?.shareLinkConnectionNotFound
+  );
 
   type FormData = {
     connectionName?: string;
@@ -413,6 +418,15 @@ export default function SettingsPage() {
       <div className="max-h-screen w-full overflow-y-auto">
         <div className="max-w-2xl mx-auto py-8">
           <div className="space-y-8">
+            {shareLinkConnectionNotFound && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  That share link points to a ClickHouse connection that isn't saved here.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {credentialSource === "env" && (
               <Alert variant="info" className="mb-8">
                 <AlertTitle className="flex items-center font-semibold">
