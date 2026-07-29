@@ -34,9 +34,19 @@ export const isCreateOrInsert = (query: string) => {
   const createView = /\bcreate\s+view\b/;
   const createDictionary = /\bcreate\s+dictionary\b/;
   const attachTable = /\battach\s+table\b/;
+  const attachDictionary = /\battach\s+dictionary\b/;
+  const detachTable = /\bdetach\s+table\b/;
+  const detachDictionary = /\bdetach\s+dictionary\b/;
+  const detachView = /\bdetach\s+view\b/;
   const optimizeTable = /\boptimize\s+table\b/;
   const truncateTable = /\btruncate\s+table\b/;
   const renameTable = /\brename\s+table\b/;
+  const renameDictionary = /\brename\s+dictionary\b/;
+  const exchangeTables = /\bexchange\s+tables\b/;
+  const exchangeDictionaries = /\bexchange\s+dictionaries\b/;
+  const systemCommand = /^\s*system\s+\w+/;
+  const killQuery = /\bkill\s+query\b/;
+  const killMutation = /\bkill\s+mutation\b/;
   const createUser = /\bcreate\s+user\b/;
   const createRole = /\bcreate\s+role\b/;
   const dropRole = /\bdrop\s+role\b/;
@@ -88,9 +98,19 @@ export const isCreateOrInsert = (query: string) => {
     createView.test(lowerQuery) ||
     createDictionary.test(lowerQuery) ||
     attachTable.test(lowerQuery) ||
+    attachDictionary.test(lowerQuery) ||
+    detachTable.test(lowerQuery) ||
+    detachDictionary.test(lowerQuery) ||
+    detachView.test(lowerQuery) ||
     optimizeTable.test(lowerQuery) ||
     truncateTable.test(lowerQuery) ||
     renameTable.test(lowerQuery) ||
+    renameDictionary.test(lowerQuery) ||
+    exchangeTables.test(lowerQuery) ||
+    exchangeDictionaries.test(lowerQuery) ||
+    systemCommand.test(lowerQuery) ||
+    killQuery.test(lowerQuery) ||
+    killMutation.test(lowerQuery) ||
     createUser.test(lowerQuery) ||
     createRole.test(lowerQuery) ||
     dropRole.test(lowerQuery) ||
