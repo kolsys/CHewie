@@ -4,7 +4,11 @@ export const isCreateOrInsert = (query: string) => {
     .split('\n')
     .filter(line => !line.trim().startsWith('--'))
     .join('\n');
-  const lowerQuery = cleanedQuery.toLowerCase();
+  // Normalize "CREATE OR REPLACE X" to "CREATE X" so the create* patterns
+  // below (which don't expect "OR REPLACE" in between) still match.
+  const lowerQuery = cleanedQuery
+    .toLowerCase()
+    .replace(/\bcreate\s+or\s+replace\s+/, 'create ');
   const createTableRegex = /\bcreate\s+table\b/;
   const insertRegex = /\binsert\b/;
   const deleteRegex = /\bdelete\b/;
