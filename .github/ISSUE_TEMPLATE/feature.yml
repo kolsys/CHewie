@@ -1,5 +1,5 @@
-name: 💡 Feature Request
-description: Tell us about something ch-UI doesn't do yet, but should!
+name: Feature Request
+description: Tell us about something CHewie doesn't do yet, but should!
 body:
   - type: textarea
     id: idea
@@ -22,6 +22,6 @@ body:
   - type: markdown
     attributes:
       value: |-
-        ## Thanks 🙏
+        ## Thanks
     validations:
       required: false

@@ -1,8 +1,10 @@
 # License
 
-## CH-UI - Apache License 2.0
+## CHewie - Apache License 2.0
 
 Copyright 2025 Caio Ricciuti
+
+This project, CHewie, is a fork maintained at [kolsys/chewie](https://github.com/kolsys/chewie). Modifications in this fork (multi-host connection management, connection environment labels, custom connection parameters) are Copyright 2026 kolsys. See [NOTICE](../NOTICE.md) for the full attribution.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,25 +24,25 @@ The Apache License 2.0 is a permissive open source license that provides users w
 
 ### You are free to:
 
-- ✅ Use the software commercially
-- ✅ Modify the software
-- ✅ Distribute the software
-- ✅ Use the software for private use
-- ✅ Sublicense the software
-- ✅ Use patents claims of contributors to the code
+- Use the software commercially
+- Modify the software
+- Distribute the software
+- Use the software for private use
+- Sublicense the software
+- Use patents claims of contributors to the code
 
 ### Under the following conditions:
 
-- ℹ️ Include the original copyright notice
-- ℹ️ Include a copy of the license
-- ℹ️ State significant changes made to the software
-- ℹ️ Include the NOTICE file (if present) with attribution notes
+- Include the original copyright notice
+- Include a copy of the license
+- State significant changes made to the software
+- Include the NOTICE file (if present) with attribution notes
 
 ### With the understanding that:
 
-- ⚠️ The software is provided "as is", without warranty of any kind
-- ⚠️ The authors cannot be held liable for damages
-- ⚠️ Trademark use is not granted except as required for describing the origin of the work
+- The software is provided "as is", without warranty of any kind
+- The authors cannot be held liable for damages
+- Trademark use is not granted except as required for describing the origin of the work
 
 ## Key Benefits of Apache 2.0
 
@@ -55,7 +57,7 @@ Apache 2.0 is compatible with many other open source licenses and is widely acce
 
 ## Third-Party Licenses
 
-CH-UI is built on top of several open-source projects. We'd like to acknowledge and give credit to these projects:
+CHewie is built on top of several open-source projects. We'd like to acknowledge and give credit to these projects:
 
 - [ClickHouse](https://github.com/ClickHouse/ClickHouse) - Apache 2.0 License
 - [React](https://github.com/facebook/react) - MIT License
@@ -63,5 +65,7 @@ CH-UI is built on top of several open-source projects. We'd like to acknowledge 
 - [Zustand](https://github.com/pmndrs/zustand) - MIT License
 - [Monaco Editor](https://github.com/microsoft/monaco-editor) - MIT License
 - [Lucide Icons](https://github.com/lucide-icons/lucide) - ISC License
+- [Radix UI](https://github.com/radix-ui/primitives) - MIT License
+- [@clickhouse/client-web](https://github.com/ClickHouse/clickhouse-js) - Apache 2.0 License
 
 For the full text of these licenses, please visit the respective project repositories.

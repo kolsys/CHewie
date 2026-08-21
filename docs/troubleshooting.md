@@ -1,30 +1,30 @@
 # Troubleshooting
 
-This guide helps you resolve common issues when using CH-UI.
+This guide helps you resolve common issues when using CHewie.
 
 ## Common Issues
 
 ### Environment Variables Not Working
 
 #### Problem
-Environment variables aren't being applied when running CH-UI in Docker.
+Environment variables aren't being applied when running CHewie in Docker.
 
 #### Solution
 
 1. **Verify you're using the latest image**:
 ```bash
-docker pull ghcr.io/caioricciuti/ch-ui:latest
+docker pull ghcr.io/kolsys/chewie:latest
 ```
 
 2. **Check Docker logs**:
 ```bash
-docker logs ch-ui
+docker logs chewie
 ```
 The logs will show which variables are SET/NOT SET.
 
 3. **Verify variables are set in the container**:
 ```bash
-docker exec ch-ui env | grep VITE_
+docker exec chewie env | grep VITE_
 ```
 
 4. **Ensure correct format**:
@@ -47,9 +47,9 @@ environment:
 **Solution**:
 1. Ensure `VITE_BASE_PATH` matches your proxy location:
 ```yaml
-# If your proxy location is /ch-ui/
+# If your proxy location is /chewie/
 environment:
-  VITE_BASE_PATH: "/ch-ui"  # No trailing slash
+  VITE_BASE_PATH: "/chewie"  # No trailing slash
 ```
 
 2. Check browser console for exact paths being requested
@@ -57,7 +57,7 @@ environment:
 
 #### Blank Page After Proxy Setup
 
-**Problem**: CH-UI loads but shows a blank page.
+**Problem**: CHewie loads but shows a blank page.
 
 **Solution**:
 ```nginx
@@ -136,7 +136,7 @@ environment:
 
 2. **Increase proxy timeout** (nginx):
 ```nginx
-location /ch-ui/ {
+location /chewie/ {
     proxy_read_timeout 600s;
     proxy_send_timeout 600s;
 }
@@ -157,9 +157,7 @@ location /ch-ui/ {
 Tables with column names containing dots, spaces, or special characters don't display correctly.
 
 #### Solution
-This is automatically handled in CH-UI v1.5.30+. For older versions:
-1. Update to the latest version
-2. Use backticks in manual queries:
+This is handled automatically. If you're writing manual queries yourself, use backticks:
 ```sql
 SELECT `column.with.dots`, `column with spaces` FROM table
 ```
@@ -168,13 +166,13 @@ SELECT `column.with.dots`, `column with spaces` FROM table
 
 #### Container Exits Immediately
 
-**Problem**: CH-UI container starts then immediately stops.
+**Problem**: CHewie container starts then immediately stops.
 
 **Solutions**:
 
 1. **Check logs**:
 ```bash
-docker logs ch-ui
+docker logs chewie
 ```
 
 2. **Verify port availability**:
@@ -185,7 +183,7 @@ lsof -i :5521
 3. **Check resource limits**:
 ```yaml
 services:
-  ch-ui:
+  chewie:
     mem_limit: 512m  # Increase if needed
 ```
 
@@ -197,7 +195,7 @@ services:
 ```yaml
 # Set user in docker-compose
 services:
-  ch-ui:
+  chewie:
     user: "1000:1000"  # Match host user
 ```
 
@@ -249,7 +247,7 @@ SELECT * FROM system.metrics WHERE metric LIKE '%CPU%';
 
 #### High Memory Usage
 
-**Problem**: CH-UI uses excessive browser memory.
+**Problem**: CHewie uses excessive browser memory.
 
 **Solutions**:
 1. Clear browser cache
@@ -306,7 +304,7 @@ SYSTEM SYNC REPLICA table_name;
 
 ### Enable Verbose Logging
 
-For detailed debugging, run CH-UI with verbose logging:
+For detailed debugging, run CHewie with verbose logging:
 
 ```bash
 # Development mode with debug output
@@ -324,27 +322,27 @@ npm run dev -- --debug
 
 ```bash
 # Health check
-docker inspect ch-ui --format='{{.State.Health.Status}}'
+docker inspect chewie --format='{{.State.Health.Status}}'
 
 # Resource usage
-docker stats ch-ui
+docker stats chewie
 
 # Network connectivity
-docker exec ch-ui ping -c 3 clickhouse-server
+docker exec chewie ping -c 3 clickhouse-server
 ```
 
 ## Getting Help
 
 If you can't resolve your issue:
 
-1. **Search existing issues**: [GitHub Issues](https://github.com/caioricciuti/ch-ui/issues)
+1. **Search existing issues**: [GitHub Issues](https://github.com/kolsys/chewie/issues)
 2. **Create a new issue** with:
-   - CH-UI version
+   - CHewie version
    - ClickHouse version
    - Docker/deployment method
    - Error messages
    - Steps to reproduce
-3. **Join discussions**: [GitHub Discussions](https://github.com/caioricciuti/ch-ui/discussions)
+3. **Join discussions**: [GitHub Discussions](https://github.com/kolsys/chewie/discussions)
 
 ### Collecting Debug Information
 
@@ -353,17 +351,17 @@ If you can't resolve your issue:
 docker version
 docker-compose version
 
-# CH-UI information
-docker inspect ch-ui | grep -i version
+# CHewie information
+docker inspect chewie | grep -i version
 
 # ClickHouse version
 docker exec clickhouse clickhouse-client --query "SELECT version()"
 
 # Environment variables (sanitized)
-docker exec ch-ui env | grep VITE_ | sed 's/PASS=.*/PASS=***/'
+docker exec chewie env | grep VITE_ | sed 's/PASS=.*/PASS=***/'
 
 # Logs
-docker logs ch-ui --tail 100
+docker logs chewie --tail 100
 ```
 
 ## Quick Fixes Reference
@@ -376,13 +374,13 @@ docker logs ch-ui --tail 100
 | Timeout errors | Increase `VITE_CLICKHOUSE_REQUEST_TIMEOUT` |
 | Auth loops | Check proxy cookie settings |
 | Slow queries | Add `LIMIT` clause to queries |
-| Special characters | Update to v1.5.30+ |
+| Special characters | Handled automatically; use backticks in manual queries |
 | Container exits | Check port 5521 availability |
 
 ## Related Documentation
 
-- [Getting Started](/getting-started) - Initial setup guide
-- [Environment Variables](/environment-variables) - Complete configuration reference
-- [Reverse Proxy](/reverse-proxy) - Proxy configuration
-- [Permissions](/permissions) - ClickHouse access control
-- [Distributed ClickHouse](/distributed-clickhouse) - Cluster setup
+- [Getting Started](getting-started.md) - Initial setup guide
+- [Environment Variables](environment-variables.md) - Complete configuration reference
+- [Reverse Proxy](reverse-proxy.md) - Proxy configuration
+- [Permissions](permissions.md) - ClickHouse access control
+- [Distributed ClickHouse](distributed-clickhouse.md) - Cluster setup

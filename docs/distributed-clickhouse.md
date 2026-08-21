@@ -1,10 +1,10 @@
 # Distributed ClickHouse Support
 
-CH-UI provides comprehensive support for distributed ClickHouse deployments, enabling you to manage cluster operations directly from the interface.
+CHewie provides comprehensive support for distributed ClickHouse deployments, enabling you to manage cluster operations directly from the interface.
 
 ## Overview
 
-Starting from version 1.5.30, CH-UI includes full support for distributed ClickHouse features:
+CHewie includes full support for distributed ClickHouse features:
 
 - **ON CLUSTER operations** for tables and users
 - **Cluster-aware table creation**
@@ -15,7 +15,7 @@ Starting from version 1.5.30, CH-UI includes full support for distributed ClickH
 
 ### Via Settings Page
 
-1. Navigate to the Settings page in CH-UI
+1. Navigate to the Settings page in CHewie
 2. Enable "Distributed Mode"
 3. Specify your cluster name
 4. Save settings
@@ -155,7 +155,7 @@ GRANT SELECT ON *.* TO new_user ON CLUSTER my_cluster;
 
 ## Docker Compose Example
 
-Complete distributed ClickHouse setup with CH-UI:
+Complete distributed ClickHouse setup with CHewie:
 
 ```yaml
 version: '3.8'
@@ -179,8 +179,8 @@ services:
     networks:
       - clickhouse-network
 
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     ports:
       - "5521:5521"
     environment:
@@ -283,7 +283,7 @@ SELECT * FROM system.mutations WHERE is_done = 0;
 3. **Create replicated tables with ON CLUSTER**
 4. **Migrate data using INSERT SELECT**
 5. **Create distributed tables**
-6. **Update CH-UI settings for distributed mode**
+6. **Update CHewie settings for distributed mode**
 
 ### Example Migration
 
@@ -305,7 +305,7 @@ ENGINE = Distributed(my_cluster, default, my_table_replicated, rand());
 
 ## Related Documentation
 
-- [Getting Started](/getting-started) - Initial setup
-- [Environment Variables](/environment-variables) - Configuration options
-- [Permissions Guide](/permissions) - User access control
-- [Troubleshooting](/troubleshooting) - Common issues
+- [Getting Started](getting-started.md) - Initial setup
+- [Environment Variables](environment-variables.md) - Configuration options
+- [Permissions Guide](permissions.md) - User access control
+- [Troubleshooting](troubleshooting.md) - Common issues

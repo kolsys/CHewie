@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-declare const __CH_UI_VERSION__: string;
+declare const __CHEWIE_VERSION__: string;
 
 declare global {
   interface Window {

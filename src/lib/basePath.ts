@@ -31,7 +31,7 @@ let cachedAppBasePath: string | null = null;
  *
  * A build with an absolute asset base URL (e.g. S3) can be served from
  * several places at once: index.html opened on the storage itself lives
- * under the asset prefix (/ch-ui/), while the same page embedded into
+ * under the asset prefix (/chewie/), while the same page embedded into
  * ClickHouse's http_server_default_response is served from "/" on the
  * ClickHouse host. So the configured base only tells us where the assets
  * are — where the *app* lives is decided by the URL the page was actually

@@ -1,28 +1,28 @@
 # Reverse Proxy Configuration
 
-This guide covers deploying CH-UI behind a reverse proxy like nginx or Apache, including HTTPS setup and authentication.
+This guide covers deploying CHewie behind a reverse proxy like nginx or Apache, including HTTPS setup and authentication.
 
 ## Overview
 
-CH-UI supports deployment behind reverse proxies with custom base paths using the `VITE_BASE_PATH` environment variable (available since v1.5.30).
+CHewie supports deployment behind reverse proxies with custom base paths using the `VITE_BASE_PATH` environment variable.
 
 ## Quick Setup
 
 ### Docker Configuration
 
-Set the base path when running CH-UI:
+Set the base path when running CHewie:
 
 ```yaml
 services:
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     ports:
       - "127.0.0.1:5521:5521"  # Only bind to localhost
     environment:
       VITE_CLICKHOUSE_URL: "http://clickhouse:8123"
       VITE_CLICKHOUSE_USER: "default"
       VITE_CLICKHOUSE_PASS: "password"
-      VITE_BASE_PATH: "/ch-ui"  # Must match proxy location
+      VITE_BASE_PATH: "/chewie"  # Must match proxy location
 ```
 
 ## Nginx Configuration
@@ -34,18 +34,13 @@ server {
     listen 80;
     server_name your-domain.com;
 
-    # CH-UI with custom base path
-    location /ch-ui/ {
+    # CHewie with custom base path
+    location /chewie/ {
         proxy_pass http://localhost:5521/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # WebSocket support for real-time features
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
         
         # Timeout settings for long queries
         proxy_read_timeout 300s;
@@ -79,16 +74,12 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    location /ch-ui/ {
+    location /chewie/ {
         proxy_pass http://localhost:5521/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
     }
 }
 ```
@@ -98,7 +89,7 @@ server {
 Add password protection:
 
 ```nginx
-location /ch-ui/ {
+location /chewie/ {
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/.htpasswd;
     
@@ -112,7 +103,7 @@ Create password file:
 htpasswd -c /etc/nginx/.htpasswd username
 ```
 
-### Multiple CH-UI Instances
+### Multiple CHewie Instances
 
 Host multiple instances at different paths:
 
@@ -122,13 +113,13 @@ server {
     server_name your-domain.com;
 
     # Production instance
-    location /ch-ui-prod/ {
+    location /chewie-prod/ {
         proxy_pass http://localhost:5521/;
         # ... proxy settings
     }
 
     # Development instance
-    location /ch-ui-dev/ {
+    location /chewie-dev/ {
         proxy_pass http://localhost:5522/;
         # ... proxy settings
     }
@@ -141,7 +132,7 @@ server {
 
 Enable required modules:
 ```bash
-a2enmod proxy proxy_http proxy_wstunnel headers
+a2enmod proxy proxy_http headers
 ```
 
 Configure virtual host:
@@ -149,17 +140,11 @@ Configure virtual host:
 <VirtualHost *:80>
     ServerName your-domain.com
 
-    # CH-UI proxy
+    # CHewie proxy
     ProxyPreserveHost On
-    ProxyPass /ch-ui/ http://localhost:5521/
-    ProxyPassReverse /ch-ui/ http://localhost:5521/
-    
-    # WebSocket support
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} websocket [NC]
-    RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule ^/ch-ui/(.*) ws://localhost:5521/$1 [P,L]
-    
+    ProxyPass /chewie/ http://localhost:5521/
+    ProxyPassReverse /chewie/ http://localhost:5521/
+
     # Headers
     RequestHeader set X-Forwarded-Proto "http"
 </VirtualHost>
@@ -180,17 +165,11 @@ Configure virtual host:
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-XSS-Protection "1; mode=block"
     
-    # CH-UI proxy
+    # CHewie proxy
     ProxyPreserveHost On
-    ProxyPass /ch-ui/ http://localhost:5521/
-    ProxyPassReverse /ch-ui/ http://localhost:5521/
-    
-    # WebSocket support
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} websocket [NC]
-    RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule ^/ch-ui/(.*) ws://localhost:5521/$1 [P,L]
-    
+    ProxyPass /chewie/ http://localhost:5521/
+    ProxyPassReverse /chewie/ http://localhost:5521/
+
     RequestHeader set X-Forwarded-Proto "https"
 </VirtualHost>
 ```
@@ -198,7 +177,7 @@ Configure virtual host:
 ### Basic Authentication
 
 ```apache
-<Location /ch-ui/>
+<Location /chewie/>
     AuthType Basic
     AuthName "Restricted Access"
     AuthUserFile /etc/apache2/.htpasswd
@@ -230,21 +209,21 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     environment:
       VITE_CLICKHOUSE_URL: "http://clickhouse:8123"
       VITE_CLICKHOUSE_USER: "default"
       VITE_CLICKHOUSE_PASS: "password"
-      VITE_BASE_PATH: "/ch-ui"
+      VITE_BASE_PATH: "/chewie"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ch-ui.rule=Host(`your-domain.com`) && PathPrefix(`/ch-ui`)"
-      - "traefik.http.routers.ch-ui.entrypoints=websecure"
-      - "traefik.http.routers.ch-ui.tls=true"
-      - "traefik.http.services.ch-ui.loadbalancer.server.port=5521"
-      - "traefik.http.middlewares.ch-ui-stripprefix.stripprefix.prefixes=/ch-ui"
-      - "traefik.http.routers.ch-ui.middlewares=ch-ui-stripprefix"
+      - "traefik.http.routers.chewie.rule=Host(`your-domain.com`) && PathPrefix(`/chewie`)"
+      - "traefik.http.routers.chewie.entrypoints=websecure"
+      - "traefik.http.routers.chewie.tls=true"
+      - "traefik.http.services.chewie.loadbalancer.server.port=5521"
+      - "traefik.http.middlewares.chewie-stripprefix.stripprefix.prefixes=/chewie"
+      - "traefik.http.routers.chewie.middlewares=chewie-stripprefix"
 ```
 
 ## Caddy Configuration
@@ -253,7 +232,7 @@ services:
 
 ```caddy
 your-domain.com {
-    handle_path /ch-ui/* {
+    handle_path /chewie/* {
         reverse_proxy localhost:5521
     }
 }
@@ -263,7 +242,7 @@ your-domain.com {
 
 ```caddy
 your-domain.com {
-    handle_path /ch-ui/* {
+    handle_path /chewie/* {
         basicauth {
             username $2a$14$...  # bcrypt hash
         }
@@ -277,12 +256,12 @@ your-domain.com {
 ```haproxy
 frontend http_front
     bind *:80
-    acl is_ch_ui path_beg /ch-ui
-    use_backend ch_ui_backend if is_ch_ui
+    acl is_chewie path_beg /chewie
+    use_backend chewie_backend if is_chewie
 
-backend ch_ui_backend
-    server ch_ui localhost:5521 check
-    http-request set-path %[path,regsub(^/ch-ui,/)]
+backend chewie_backend
+    server chewie localhost:5521 check
+    http-request set-path %[path,regsub(^/chewie,/)]
     http-request set-header X-Forwarded-Proto http
 ```
 
@@ -304,16 +283,16 @@ services:
       - ./ssl:/etc/nginx/ssl
       - ./htpasswd:/etc/nginx/.htpasswd
     depends_on:
-      - ch-ui
+      - chewie
 
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     restart: always
     environment:
       VITE_CLICKHOUSE_URL: "${CLICKHOUSE_URL}"
       VITE_CLICKHOUSE_USER: "${CLICKHOUSE_USER}"
       VITE_CLICKHOUSE_PASS: "${CLICKHOUSE_PASS}"
-      VITE_BASE_PATH: "/ch-ui"
+      VITE_BASE_PATH: "/chewie"
     networks:
       - internal
 
@@ -339,8 +318,8 @@ events {
 }
 
 http {
-    upstream ch_ui {
-        server ch-ui:5521;
+    upstream chewie {
+        server chewie:5521;
     }
 
     server {
@@ -354,20 +333,15 @@ http {
         ssl_certificate /etc/nginx/ssl/cert.pem;
         ssl_certificate_key /etc/nginx/ssl/key.pem;
         
-        location /ch-ui/ {
-            auth_basic "CH-UI Access";
+        location /chewie/ {
+            auth_basic "CHewie Access";
             auth_basic_user_file /etc/nginx/.htpasswd;
             
-            proxy_pass http://ch_ui/;
+            proxy_pass http://chewie/;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            
-            # WebSocket
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
             
             # Timeouts
             proxy_read_timeout 300s;
@@ -391,21 +365,10 @@ http {
 
 ```yaml
 # Wrong
-VITE_BASE_PATH: "/ch-ui/"  # Don't include trailing slash
+VITE_BASE_PATH: "/chewie/"  # Don't include trailing slash
 
 # Correct
-VITE_BASE_PATH: "/ch-ui"
-```
-
-### WebSocket Connection Failed
-
-**Problem**: Real-time features not working
-**Solution**: Add WebSocket proxy headers
-
-```nginx
-proxy_http_version 1.1;
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection "upgrade";
+VITE_BASE_PATH: "/chewie"
 ```
 
 ### Authentication Loop
@@ -415,7 +378,7 @@ proxy_set_header Connection "upgrade";
 
 ```nginx
 proxy_set_header Cookie $http_cookie;
-proxy_cookie_path / /ch-ui/;
+proxy_cookie_path / /chewie/;
 ```
 
 ### Slow Query Timeout
@@ -441,17 +404,17 @@ proxy_send_timeout 600s;
 ### Rate Limiting Example (nginx)
 
 ```nginx
-limit_req_zone $binary_remote_addr zone=ch_ui:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=chewie:10m rate=10r/s;
 
-location /ch-ui/ {
-    limit_req zone=ch_ui burst=20 nodelay;
+location /chewie/ {
+    limit_req zone=chewie burst=20 nodelay;
     # ... proxy configuration
 }
 ```
 
 ## Related Documentation
 
-- [Getting Started](/getting-started) - Initial setup
-- [Environment Variables](/environment-variables) - Configuration reference
-- [Troubleshooting](/troubleshooting) - Common issues
-- [Security](/permissions) - ClickHouse permissions
+- [Getting Started](getting-started.md) - Initial setup
+- [Environment Variables](environment-variables.md) - Configuration reference
+- [Troubleshooting](troubleshooting.md) - Common issues
+- [Security](permissions.md) - ClickHouse permissions

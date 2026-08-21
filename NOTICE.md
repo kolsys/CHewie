@@ -7,7 +7,7 @@ This product includes software developed by Caio Ricciuti (https://github.com/ca
 Fork Notice
 ================================================================================
 
-CH-UI v1 Multihost (https://github.com/kolsys/ch-ui-v1-multihost) is a fork of
+CHewie (https://github.com/kolsys/chewie) is a fork of
 CH-UI version 1.9.0, the original work of Caio Ricciuti
 (https://github.com/caioricciuti/ch-ui), licensed under the Apache License 2.0.
 

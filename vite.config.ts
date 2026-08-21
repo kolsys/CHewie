@@ -15,6 +15,6 @@ export default defineConfig({
     },
   },
   define: {
-    __CH_UI_VERSION__: JSON.stringify(pkg.version),
+    __CHEWIE_VERSION__: JSON.stringify(pkg.version),
   },
 });

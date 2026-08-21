@@ -18,7 +18,7 @@ function MetricsOverview() {
   const [isLocalHostInstance, setIsLocalHostInstance] = React.useState(false);
 
   useEffect(() => {
-    document.title = "CH-UI | Metrics";
+    document.title = "CHewie | Metrics";
     if (!isServerAvailable) {
       toast.error(
         "No active connection. Please configure your connection in Settings."

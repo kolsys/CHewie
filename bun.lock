@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "ch-ui",
+      "name": "chewie",
       "dependencies": {
         "@clickhouse/client-common": "^1.23.0",
         "@clickhouse/client-web": "^1.23.1",

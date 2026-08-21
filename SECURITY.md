@@ -2,18 +2,15 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.5.x   | ✅                 |
-| < 1.5   | ❌                 |
+Only the latest released version of CHewie is supported. Please upgrade before reporting an issue.
 
 ## Reporting a Vulnerability
 
-We take the security of CH-UI seriously. If you have discovered a security vulnerability, please report it to us as described below.
+We take the security of CHewie seriously. If you have discovered a security vulnerability, please report it to us as described below.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them directly to the project maintainer at [caio.ricciuti+security@outlook.com](mailto:caio.ricciuti+security@outlook.com)
+Instead, please report them privately through [GitHub Security Advisories](https://github.com/kolsys/chewie/security/advisories/new) for this repository.
 
 Please include the following information:
 
@@ -27,10 +24,6 @@ Please include the following information:
 
 This information will help us triage your report more quickly.
 
-## Preferred Languages
-
-We prefer all communications to be in English, but are also able to understand Portuguese and Spanish.
-
 ## Policy
 
 - We will respond to your report within the fastest time possible, acknowledging your report and letting you know the next steps.
@@ -38,4 +31,4 @@ We prefer all communications to be in English, but are also able to understand P
 - We will keep you informed of the progress towards resolving the problem.
 - If you have acted in good faith, we will publicly acknowledge your responsible disclosure, if you wish.
 
-Thank you for helping keep CH-UI and our users safe!
+Thank you for helping keep CHewie and our users safe!

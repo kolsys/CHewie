@@ -1,24 +1,22 @@
-# Acknowledgments 🏆
+# Acknowledgments
 
-CH-UI is built on the shoulders of giants. We extend our heartfelt gratitude to the creators and maintainers of the following open-source projects that make our work possible.
+CHewie is built on the shoulders of giants. We extend our heartfelt gratitude to the creators and maintainers of the following open-source projects that make our work possible.
 
-## ClickHouse ⭐
+## ClickHouse
 
-::: info
-[ClickHouse](https://clickhouse.com/) - THE ONE AND ONLY! We wouldn't be here without ClickHouse!
-:::
+> [ClickHouse](https://clickhouse.com/) - THE ONE AND ONLY! We wouldn't be here without ClickHouse!
 
-## Core Technologies 🛠️
+## Core Technologies
 
 - [React](https://reactjs.org/) - A JavaScript library for building user interfaces
 - [TypeScript](https://www.typescriptlang.org/) - A typed superset of JavaScript that compiles to plain JavaScript
 - [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
 
-## State Management 📊
+## State Management
 
 - [Zustand](https://github.com/pmndrs/zustand) - A small, fast and scalable bearbones state-management solution
 
-## UI Components and Styling 🎨
+## UI Components and Styling
 
 - [Radix UI](https://www.radix-ui.com/) - An open-source UI component library
 - [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework
@@ -26,55 +24,53 @@ CH-UI is built on the shoulders of giants. We extend our heartfelt gratitude to 
 - [class-variance-authority](https://cva.style/docs) - Manage UI variants with less code
 - [clsx](https://github.com/lukeed/clsx) - A tiny utility for constructing className strings conditionally
 - [tailwind-merge](https://github.com/dcastil/tailwind-merge) - Merge Tailwind CSS classes without style conflicts
-- [tailwindcss-animate](https://github.com/jamiebuilds/tailwindcss-animate) - A Tailwind CSS plugin for creating animations
+- [dnd kit](https://dndkit.com/) - A lightweight, performant drag and drop toolkit for React
+- [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) - Resizable panel layouts for React
 
-## Database Interaction 💾
+## Database Interaction
 
 - [@clickhouse/client-web](https://github.com/ClickHouse/clickhouse-js) - Official ClickHouse JavaScript client
 
-## Routing 🛣️
+## Routing
 
 - [React Router](https://reactrouter.com/) - Declarative routing for React
 
-## Data Visualization and Tables 📈
+## Data Visualization and Tables
 
-- [Recharts](https://recharts.org/) - A composable charting library built on React components
-- [@carbon/charts-react](https://carbondesignsystem.com/data-visualization/getting-started) - Carbon Charts for data visualization
 - [AG Grid](https://www.ag-grid.com/) - Advanced Data Grid / Data Table supporting React
-- [@tanstack/react-table](https://tanstack.com/table/v8) - Headless UI for building powerful tables & datagrids
+- [uPlot](https://github.com/leeoniya/uPlot) - A small, fast chart library for time series, lines, areas, and more
 
-## Form Handling 📝
+## Form Handling
 
 - [React Hook Form](https://react-hook-form.com/) - Performant, flexible and extensible forms with easy-to-use validation
 - [Zod](https://github.com/colinhacks/zod) - TypeScript-first schema validation with static type inference
+- [react-day-picker](https://daypicker.dev/) - Date picker component for React
 
-## UI Enhancements ✨
+## UI Enhancements
 
 - [Framer Motion](https://www.framer.com/motion/) - A production-ready motion library for React
 - [cmdk](https://cmdk.paco.me/) - Fast, composable, unstyled command menu for React
 - [Sonner](https://sonner.emilkowal.ski/) - An opinionated toast component for React
-- [Vaul](https://vaul.emilkowal.ski/) - Drawer component for React
 
-## Code Editing 👨‍💻
+## Code Editing
 
 - [Monaco Editor](https://microsoft.github.io/monaco-editor/) - The code editor that powers VS Code
 - [sql-formatter](https://github.com/sql-formatter-org/sql-formatter) - A JavaScript library for pretty-printing SQL queries
+- [highlight.js](https://highlightjs.org/) - Syntax highlighting for the browser
 
-## Utility Libraries 🔧
+## Utility Libraries
 
 - [Papa Parse](https://www.papaparse.com/) - Powerful CSV parser for JavaScript
 - [date-fns](https://date-fns.org/) - Modern JavaScript date utility library
+- [lz-string](https://github.com/pieroxy/lz-string) - Compression for sharing state in URLs/localStorage
 
-## Development Tools 🛠️
+## Development Tools
 
 - [ESLint](https://eslint.org/) - A tool for identifying and reporting on patterns in JavaScript
-- [PostCSS](https://postcss.org/) - A tool for transforming CSS with JavaScript
-- [Autoprefixer](https://github.com/postcss/autoprefixer) - Parse CSS and add vendor prefixes to rules
+- [Vitest](https://vitest.dev/) - A fast unit test framework powered by Vite
 
-## Special Thanks 💝
+## Special Thanks
 
 We're also grateful for the countless blog posts, tutorials, and Stack Overflow answers that have helped shape this project. A special thank you to the ClickHouse community for their excellent documentation and support.
 
-::: info
-If we've inadvertently missed anyone, please let us know, and we'll gladly include them.
-:::
+> If we've inadvertently missed anyone, please let us know, and we'll gladly include them.

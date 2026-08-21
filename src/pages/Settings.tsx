@@ -153,7 +153,7 @@ const formSchema = z.object({
 });
 
 export default function SettingsPage() {
-  document.title = "CH-UI | Settings";
+  document.title = "CHewie | Settings";
   const {
     credential,
     setCredential,

@@ -1,8 +1,8 @@
 # Getting Started
 
-Welcome to CH-UI! This guide will help you get up and running quickly with our modern interface for ClickHouse databases.
+Welcome to CHewie! This guide will help you get up and running quickly with our modern interface for ClickHouse databases.
 
-## Quick Start ⚡
+## Quick Start
 
 Choose your preferred installation method:
 
@@ -11,24 +11,24 @@ Choose your preferred installation method:
 ### Simple Docker Setup
 
 ```bash
-docker run --name ch-ui -p 5521:5521 ghcr.io/caioricciuti/ch-ui:latest
+docker run --name chewie -p 5521:5521 ghcr.io/kolsys/chewie:latest
 ```
 
 ### Docker with Environment Variables
 
 ```bash
-docker run --name ch-ui -p 5521:5521 \
+docker run --name chewie -p 5521:5521 \
   -e VITE_CLICKHOUSE_URL=http://your-clickhouse-server:8123 \
   -e VITE_CLICKHOUSE_USER=your-username \
   -e VITE_CLICKHOUSE_PASS=your-password \
-  ghcr.io/caioricciuti/ch-ui:latest
+  ghcr.io/kolsys/chewie:latest
 ```
 
 ## Docker Compose
 
 ### Complete Example with ClickHouse
 
-Here's a complete example of running both CH-UI and ClickHouse in the same Docker Compose file:
+Here's a complete example of running both CHewie and ClickHouse in the same Docker Compose file:
 
 ```yaml
 services:
@@ -47,8 +47,8 @@ services:
       - "8123:8123/tcp"
       - "9000:9000/tcp"
 
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     environment:
       VITE_CLICKHOUSE_URL: http://my-docker-host-ip-or-fqdn:8123
       VITE_CLICKHOUSE_USER: default
@@ -57,10 +57,9 @@ services:
       - "5521:5521/tcp"
 ```
 
-::: tip Important Configuration Notes
-1. The ClickHouse port `8123` is published to make it accessible on the Docker host
-2. For `VITE_CLICKHOUSE_URL`, use your Docker host's IP address or FQDN instead of the internal Docker network name
-:::
+> **Important Configuration Notes**
+> 1. The ClickHouse port `8123` is published to make it accessible on the Docker host
+> 2. For `VITE_CLICKHOUSE_URL`, use your Docker host's IP address or FQDN instead of the internal Docker network name
 
 ### Basic Docker Compose
 
@@ -68,11 +67,11 @@ For a simpler setup without ClickHouse:
 
 ```yaml
 services:
-  ch-ui:
-    image: ghcr.io/caioricciuti/ch-ui:latest
+  chewie:
+    image: ghcr.io/kolsys/chewie:latest
     restart: always
     ports:
-      - "${CH_UI_PORT:-5521}:5521"
+      - "${CHEWIE_PORT:-5521}:5521"
     environment:
       # Core Configuration
       VITE_CLICKHOUSE_URL: "${CLICKHOUSE_URL}"
@@ -99,8 +98,8 @@ docker-compose up -d
 ### Clone Repository
 
 ```bash
-git clone https://github.com/caioricciuti/ch-ui.git
-cd ch-ui
+git clone https://github.com/kolsys/chewie.git
+cd chewie
 ```
 
 ### Install Dependencies
@@ -129,7 +128,7 @@ For development:
 npm run dev
 ```
 
-## System Requirements 🖥️
+## System Requirements
 
 ### Prerequisites
 
@@ -139,26 +138,27 @@ npm run dev
   - Node.js >= 20.x
   - npm >= 10.x
 
-## Configuration Options ⚙️
+## Configuration Options
 
 ### Environment Variables
 
-| Variable | Description | Required | Default | Since |
-|----------|-------------|----------|---------|-------|
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
 | **Core Configuration** |
-| `VITE_CLICKHOUSE_URL` | ClickHouse server URL | Yes | - | v1.0.0 |
-| `VITE_CLICKHOUSE_USER` | ClickHouse username | Yes | - | v1.0.0 |
-| `VITE_CLICKHOUSE_PASS` | ClickHouse password | No | `""` | v1.0.0 |
+| `VITE_CLICKHOUSE_URL` | ClickHouse server URL | Yes | - |
+| `VITE_CLICKHOUSE_USER` | ClickHouse username | Yes | - |
+| `VITE_CLICKHOUSE_PASS` | ClickHouse password | No | `""` |
+| `VITE_CLICKHOUSE_DATABASE` | Default database | No | - |
 | **Advanced Features** |
-| `VITE_CLICKHOUSE_USE_ADVANCED` | Enable advanced ClickHouse features (e.g., custom settings, system tables access) | No | `false` | v1.4.0 |
-| `VITE_CLICKHOUSE_CUSTOM_PATH` | Custom path for ClickHouse HTTP interface | No | - | v1.4.0 |
-| `VITE_CLICKHOUSE_REQUEST_TIMEOUT` | Request timeout in milliseconds | No | `30000` | v1.4.0 |
+| `VITE_CLICKHOUSE_USE_ADVANCED` | Enable advanced ClickHouse features (e.g., custom settings, system tables access) | No | `false` |
+| `VITE_CLICKHOUSE_CUSTOM_PATH` | Custom path for ClickHouse HTTP interface | No | - |
+| `VITE_CLICKHOUSE_REQUEST_TIMEOUT` | Request timeout in milliseconds | No | `30000` |
 | **Deployment Configuration** |
-| `VITE_BASE_PATH` | Base path for reverse proxy deployment (e.g., "/ch-ui") | No | `/` | v1.5.30 |
+| `VITE_BASE_PATH` | Base path for reverse proxy deployment (e.g., "/chewie") | No | `/` |
 
-For detailed environment variable documentation, see our [Environment Variables Reference](/environment-variables).
+For detailed environment variable documentation, see our [Environment Variables Reference](environment-variables.md).
 
-## Development Environment 🛠️
+## Development Environment
 
 ### Local ClickHouse Instance
 
@@ -178,11 +178,9 @@ Default credentials:
 - Username: dev
 - Password: dev
 
-::: info
-Data is persisted in `.clickhouse_local_data` directory.
-:::
+> Data is persisted in `.clickhouse_local_data` directory.
 
-## Security Recommendations 🔒
+## Security Recommendations
 
 ### Reverse Proxy Setup
 
@@ -202,22 +200,10 @@ Data is persisted in `.clickhouse_local_data` directory.
 - Regularly rotate credentials
 - Monitor access logs
 
-For detailed permission requirements, see our [Permissions Guide](/permissions).
+For detailed permission requirements, see our [Permissions Guide](permissions.md).
 
 ## Next Steps
 
-- [Configure ClickHouse permissions](/permissions) for CH-UI access
-- [Contribute](/contributing) to the project
-- Check the [Changelog](https://github.com/caioricciuti/ch-ui/releases) for latest updates
-
----
-
-### Support the Project
-
-If you find CH-UI helpful, consider:
-
-<div style="text-align: center; margin: 2rem 0;">
-  <a href="https://buymeacoffee.com/caioricciuti" target="_blank">
-    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=caioricciuti&button_colour=FF813F&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" alt="Buy Me A Coffee" />
-  </a>
-</div>
+- [Configure ClickHouse permissions](permissions.md) for CHewie access
+- [Contribute](contributing.md) to the project
+- Check the [Changelog](https://github.com/kolsys/chewie/releases) for latest updates

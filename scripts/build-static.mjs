@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Builds CH-UI with an absolute base URL (so all JS/CSS/asset requests
+// Builds CHewie with an absolute base URL (so all JS/CSS/asset requests
 // resolve against that static host, not the ClickHouse host) and wraps the
 // resulting dist/index.html into a <http_server_default_response> snippet
 // for ClickHouse's config.d/, so ClickHouse's own HTTP port can serve the
 // SPA shell while the static assets are served from S3 (or any static host).
 //
 // Usage:
-//   node scripts/build-static.mjs --base-url=https://your-bucket.example/ch-ui/
-//   S3_BASE_URL=https://your-bucket.example/ch-ui/ node scripts/build-static.mjs
+//   node scripts/build-static.mjs --base-url=https://your-bucket.example/chewie/
+//   S3_BASE_URL=https://your-bucket.example/chewie/ node scripts/build-static.mjs
 //
 // Options:
 //   --base-url=URL     required. Public URL assets will be served from.
@@ -44,8 +44,8 @@ if (!baseUrlRaw) {
   console.error(
     "Missing base URL.\n\n" +
       "Pass the public URL your static assets will be served from, e.g.:\n" +
-      "  node scripts/build-static.mjs --base-url=https://your-bucket.example/ch-ui/\n" +
-      "  S3_BASE_URL=https://your-bucket.example/ch-ui/ node scripts/build-static.mjs\n"
+      "  node scripts/build-static.mjs --base-url=https://your-bucket.example/chewie/\n" +
+      "  S3_BASE_URL=https://your-bucket.example/chewie/ node scripts/build-static.mjs\n"
   );
   process.exit(1);
 }
@@ -63,7 +63,7 @@ const configOut = path.resolve(
 const indexHtmlPath = path.join(outDir, "index.html");
 
 if (!args["skip-build"]) {
-  console.log(`Building CH-UI with base URL: ${baseUrl}`);
+  console.log(`Building CHewie with base URL: ${baseUrl}`);
   execFileSync(
     path.join(rootDir, "node_modules", ".bin", "vite"),
     ["build", "--outDir", outDir],
@@ -138,7 +138,7 @@ console.log(
     `     e.g. (S3-compatible storage):\n` +
     `       aws s3 sync "${outDirRel}" s3://<bucket>/<prefix>/ --exclude index.html --exclude ${configOutName}\n` +
     `  2. Copy ${path.relative(rootDir, configOut)} to ClickHouse's config.d/ ` +
-    `(e.g. /etc/clickhouse-server/config.d/ch-ui-static.xml) and restart/reload the server.\n` +
+    `(e.g. /etc/clickhouse-server/config.d/chewie-static.xml) and restart/reload the server.\n` +
     `  3. Visiting the ClickHouse HTTP interface root (e.g. http://<host>:8123/) will now serve ` +
-    `the CH-UI SPA shell, which loads its JS/CSS from ${baseUrl}\n`
+    `the CHewie SPA shell, which loads its JS/CSS from ${baseUrl}\n`
 );

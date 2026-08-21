@@ -12,7 +12,7 @@ import UploadFromFile from "@/features/explorer/components/UploadFile";
 
 function HomePage() {
   useEffect(() => {
-    document.title = "CH-UI | Home - Workspace";
+    document.title = "CHewie | Home - Workspace";
   }, []);
 
   return (

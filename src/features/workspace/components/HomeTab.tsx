@@ -35,7 +35,7 @@ const resourceCards = [
   {
     title: "Star us on GitHub!",
     description: "Support our project by starring it on GitHub.",
-    link: "https://github.com/kolsys/ch-ui-v1-multihost",
+    link: "https://github.com/kolsys/chewie",
     Icon: Github,
     action: "Star on GitHub",
   },
@@ -47,11 +47,11 @@ const resourceCards = [
     action: "Read Docs",
   },
   {
-    title: "CH-UI Documentation",
+    title: "CHewie Documentation",
     Icon: ExternalLink,
-    description: "Learn how to make the most of CH-UI.",
-    link: "https://github.com/kolsys/ch-ui-v1-multihost#readme",
-    action: "Explore CH-UI",
+    description: "Learn how to make the most of CHewie.",
+    link: "https://github.com/kolsys/chewie#readme",
+    action: "Explore CHewie",
   },
 ];
 

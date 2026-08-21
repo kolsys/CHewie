@@ -876,7 +876,7 @@ const useAppStore = create<AppState>()(
             const result = await runQuery(`
               SELECT COUNT(*) as exists
               FROM system.tables
-              WHERE database = 'CH_UI'
+              WHERE database = 'chewie'
               AND name = 'saved_queries'
             `);
             const response = result as SavedQueriesCheckResponse;
@@ -922,10 +922,10 @@ const useAppStore = create<AppState>()(
           }));
           try {
             // Run queries in sequence with proper error handling
-            await runQuery("CREATE DATABASE IF NOT EXISTS CH_UI").then(
+            await runQuery("CREATE DATABASE IF NOT EXISTS chewie").then(
               async () => {
                 await runQuery(`
-                CREATE TABLE IF NOT EXISTS CH_UI.saved_queries (
+                CREATE TABLE IF NOT EXISTS chewie.saved_queries (
                   id String,
                   name String,
                   query String,
@@ -980,7 +980,7 @@ const useAppStore = create<AppState>()(
             },
           }));
           try {
-            await runQuery("DROP TABLE IF EXISTS CH_UI.saved_queries");
+            await runQuery("DROP TABLE IF EXISTS chewie.saved_queries");
             // Verify the table was dropped successfully
             const isActive = await get().checkSavedQueriesStatus();
             if (isActive) {
@@ -1024,7 +1024,7 @@ const useAppStore = create<AppState>()(
             const safeQuery = escapeClickhouseString(query);
 
             const insertQuery = `
-              INSERT INTO CH_UI.saved_queries (id, name, query, created_at, updated_at, owner, is_public)
+              INSERT INTO chewie.saved_queries (id, name, query, created_at, updated_at, owner, is_public)
               VALUES (
                 '${tabId}',
                 '${safeName}',
@@ -1075,7 +1075,7 @@ const useAppStore = create<AppState>()(
             const safeQuery = escapeClickhouseString(query);
 
             const updateQuery = `
-              ALTER TABLE CH_UI.saved_queries
+              ALTER TABLE chewie.saved_queries
               UPDATE
                 name = '${safeName}',
                 query = '${safeQuery}',
@@ -1110,7 +1110,7 @@ const useAppStore = create<AppState>()(
           }
           try {
             await clickHouseClient.command({
-              query: `ALTER TABLE CH_UI.saved_queries DELETE WHERE id = '${id}'`,
+              query: `ALTER TABLE chewie.saved_queries DELETE WHERE id = '${id}'`,
             });
             await removeTab(id);
 
@@ -1135,7 +1135,7 @@ const useAppStore = create<AppState>()(
           try {
             let query;
             if (id) {
-              query = `SELECT * FROM CH_UI.saved_queries WHERE id = '${id}'`;
+              query = `SELECT * FROM chewie.saved_queries WHERE id = '${id}'`;
             } else {
               query = appQueries.getSavedQueries.query;
             }

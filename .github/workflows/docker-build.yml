@@ -73,8 +73,8 @@ jobs:
             # SHA tag for precise tracking
             type=sha,format=short,prefix=sha-
           labels: |
-            org.opencontainers.image.title=CH-UI v1 Multihost
-            org.opencontainers.image.description=A modern, feature-rich web interface for ClickHouse databases. Fork of CH-UI v1.9 with multi-host support.
+            org.opencontainers.image.title=CHewie
+            org.opencontainers.image.description=A modern, feature-rich web interface for ClickHouse databases. Originally forked from CH-UI, with multi-host connection support.
             org.opencontainers.image.vendor=kolsys
             org.opencontainers.image.licenses=Apache-2.0
             org.opencontainers.image.documentation=https://github.com/${{ github.repository }}#readme

@@ -122,7 +122,7 @@ const Sidebar = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // version from vite.config.ts
-  const ch_ui_version = __CH_UI_VERSION__;
+  const chewieVersion = __CHEWIE_VERSION__;
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -173,13 +173,13 @@ const Sidebar = () => {
   const bottomNavLinks = [
     { to: "/settings", label: "Settings", icon: CogIcon, isNewWindow: false },
     {
-      to: "https://github.com/kolsys/ch-ui-v1-multihost",
+      to: "https://github.com/kolsys/chewie",
       label: "GitHub",
       icon: Github,
       isNewWindow: true,
     },
     {
-      to: "https://github.com/kolsys/ch-ui-v1-multihost#readme",
+      to: "https://github.com/kolsys/chewie#readme",
       label: "Documentation",
       icon: BookText,
       isNewWindow: true,
@@ -196,7 +196,7 @@ const Sidebar = () => {
         <Link to="/" className="flex items-center space-x-2">
           <img src={Logo} alt="Logo" className="h-8 w-8" />
           {isExpanded && (
-            <span className="font-bold text-lg truncate">CH-UI</span>
+            <span className="font-bold text-lg truncate">CHewie</span>
           )}
         </Link>
         {isExpanded && (
@@ -457,7 +457,7 @@ const Sidebar = () => {
                 </p>
               )}
               <p className="text-xs">Click House Version: {version}</p>
-              <p className="text-xs">CH-UI MH Version: {ch_ui_version}</p>
+              <p className="text-xs">CHewie Version: {chewieVersion}</p>
             </div>
           </PopoverContent>
         </Popover>

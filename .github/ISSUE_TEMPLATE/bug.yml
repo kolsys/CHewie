@@ -1,11 +1,11 @@
-name: 🐞 Bug Report
+name: Bug Report
 description: Found something that doesn't work as expected?
 body:
   - type: dropdown
     id: Environment
     attributes:
       label: Environment
-      description: How are you using CH-UI?
+      description: How are you using CHewie?
       options:
         - NPM build
         - Docker
@@ -64,13 +64,13 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of CH-UI are you using?
+      description: What version of CHewie are you using?
       placeholder: e.g. 1.5.0
     validations:
       required: true
   - type: markdown
     attributes:
       value: |-
-        ### All done, now, just submit the issue and I will do my best to take care of it!  🙏
+        ### All done, now, just submit the issue and I will do my best to take care of it!
     validations:
       required: false

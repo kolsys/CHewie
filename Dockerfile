@@ -1,4 +1,4 @@
-# Bun-optimized Dockerfile for CH-UI
+# Bun-optimized Dockerfile for CHewie
 # Using Bun for faster builds and smaller images
 
 # Build stage
@@ -48,21 +48,21 @@ COPY inject-env.cjs /app/inject-env.cjs
 RUN bun add serve@14.2.5
 
 # Create non-root user
-RUN addgroup -S ch-group -g 1001 && \
-    adduser -S ch-user -u 1001 -G ch-group
+RUN addgroup -S chewie-group -g 1001 && \
+    adduser -S chewie-user -u 1001 -G chewie-group
 
 # Set ownership (includes node_modules with serve)
-RUN chown -R ch-user:ch-group /app
+RUN chown -R chewie-user:chewie-group /app
 
 # Add metadata labels
-LABEL org.opencontainers.image.title="CH-UI" \
-      org.opencontainers.image.description="A modern web interface for ClickHouse databases" \
-      org.opencontainers.image.vendor="Caio Ricciuti" \
+LABEL org.opencontainers.image.title="CHewie" \
+      org.opencontainers.image.description="A modern, feature-rich web interface for ClickHouse databases. Originally forked from CH-UI, with multi-host connection support." \
+      org.opencontainers.image.vendor="kolsys" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${COMMIT_SHA}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.source="https://github.com/kolsys/ch-ui-v1-multihost"
+      org.opencontainers.image.source="https://github.com/kolsys/chewie"
 
 # Environment variables with defaults
 ENV VITE_CLICKHOUSE_URL="" \
@@ -78,7 +78,7 @@ ENV VITE_CLICKHOUSE_URL="" \
 EXPOSE 5521
 
 # Switch to non-root user
-USER ch-user
+USER chewie-user
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
