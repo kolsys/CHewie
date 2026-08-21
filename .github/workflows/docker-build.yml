@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -56,6 +55,11 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📌 Version: $VERSION"
+
+          # OCI image refs must be lowercase; github.repository preserves
+          # the repo's display case (e.g. kolsys/CHewie), which Trivy/cosign
+          # reject when used verbatim.
+          echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Extract metadata
         id: meta
