@@ -13,7 +13,7 @@ import {
 } from "@/types/common";
 import { createClient } from "@clickhouse/client-web";
 import { parseCustomParams } from "@/lib/connectionParams";
-import { isCreateOrInsert } from "@/helpers/sqlUtils";
+import { isCreateOrInsert, isExplain } from "@/helpers/sqlUtils";
 import { OverflowMode } from "@clickhouse/client-common/dist/settings";
 import { toast } from "sonner";
 import { appQueries } from "@/features/workspace/editor/appQueries";
@@ -495,10 +495,23 @@ const useAppStore = create<AppState>()(
               return result;
             }
 
-            const result = await clickHouseClient.query({
-              query: trimmedQuery,
-            });
-            const jsonResult = (await result.json()) as any;
+            let jsonResult: any;
+            if (isExplain(trimmedQuery)) {
+              // query() appends "FORMAT JSON" to the SQL text, but EXPLAIN AST
+              // parses its inner statement together with that FORMAT clause,
+              // so ClickHouse replies with plain text. Request JSON via
+              // default_format instead of a FORMAT suffix.
+              const result = await clickHouseClient.exec({
+                query: trimmedQuery.replace(/;\s*$/, ""),
+                clickhouse_settings: { default_format: "JSON" },
+              });
+              jsonResult = await new Response(result.stream as any).json();
+            } else {
+              const result = await clickHouseClient.query({
+                query: trimmedQuery,
+              });
+              jsonResult = await result.json();
+            }
             const processedResult: QueryResult = {
               meta: jsonResult.meta || [],
               data: jsonResult.data || [],

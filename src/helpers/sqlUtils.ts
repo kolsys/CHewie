@@ -1,9 +1,18 @@
-export const isCreateOrInsert = (query: string) => {
-  // Remove lines that start with '--'
-  const cleanedQuery = query
+// Remove lines that start with '--'
+const stripLineComments = (query: string) =>
+  query
     .split('\n')
     .filter(line => !line.trim().startsWith('--'))
     .join('\n');
+
+export const isExplain = (query: string) =>
+  /^\s*explain\b/i.test(stripLineComments(query));
+
+export const isCreateOrInsert = (query: string) => {
+  // EXPLAIN never executes the wrapped statement, so "EXPLAIN AST INSERT ..."
+  // etc. must go through the regular query path to return its output.
+  if (isExplain(query)) return false;
+  const cleanedQuery = stripLineComments(query);
   // Normalize "CREATE OR REPLACE X" to "CREATE X" so the create* patterns
   // below (which don't expect "OR REPLACE" in between) still match.
   const lowerQuery = cleanedQuery
