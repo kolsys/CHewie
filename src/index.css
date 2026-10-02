@@ -348,3 +348,8 @@
 .result-chart-plot .uplot-container > div:first-child {
   height: auto !important;
 }
+
+/* Result grid cells (src/lib/gridDefaults.ts) */
+.ag-cell.grid-cell-null {
+  font-style: italic;
+}

@@ -1,12 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, AllCommunityModule, ICellRendererParams } from "ag-grid-community";
-import { themeBalham, colorSchemeDark } from "ag-grid-community";
 import { useTheme } from "@/components/common/theme-provider";
+import {
+  DEFAULT_COL_DEF,
+  GRID_MODULES,
+  GRID_THEME_DARK,
+  GRID_THEME_LIGHT,
+  getTotalsRowStyle,
+} from "@/lib/gridDefaults";
 import EmptyQueryResult from "@/features/workspace/components/EmptyQueryResult";
 import StatisticsDisplay from "@/features/workspace/components/StatisticsDisplay";
 import DownloadDialog from "@/components/common/DownloadDialog";
-import { handleGridCopy } from "@/lib/gridClipboard";
+import { createGridCopyHandler } from "@/lib/gridClipboard";
 
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,36 +33,21 @@ interface AgTableProps {
   height?: number | string; // container height
 }
 
-// Cell renderer that formats objects/null specially and renders everything
-// else as plain text (avoids dangerouslySetInnerHTML, which used to run every
-// cell value through the browser's HTML parser).
-const CustomCellRenderer = (props: ICellRendererParams) => {
-  const { value } = props;
-  if (value === null || value === undefined) {
-    return <em>null</em>;
-  }
-  if (typeof value === "object") {
-    return <span style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(value, null, 2)}</span>;
-  }
-  return <>{String(value)}</>;
-};
-
 export default function AgTable({ data, height = "350px" }: AgTableProps) {
   const { theme } = useTheme();
 
-  const gridTheme =
-    theme === "light" ? themeBalham : themeBalham.withPart(colorSchemeDark);
+  const gridTheme = theme === "light" ? GRID_THEME_LIGHT : GRID_THEME_DARK;
 
-  const defaultColDef: ColDef = {
-    flex: 1,
-    minWidth: 130,
-    sortable: true,
-    filter: true,
-    resizable: true,
-    filterParams: { buttons: ["reset", "apply"] },
-    cellRenderer: CustomCellRenderer,
-    autoHeight: true,
-  };
+  const dataGridRef = useRef<AgGridReact>(null);
+  const metaGridRef = useRef<AgGridReact>(null);
+  const onDataCopy = useMemo(
+    () => createGridCopyHandler(() => dataGridRef.current?.api),
+    []
+  );
+  const onMetaCopy = useMemo(
+    () => createGridCopyHandler(() => metaGridRef.current?.api),
+    []
+  );
 
   const dataColumnDefs = useMemo(() => {
     if (!data?.data?.length) return [];
@@ -74,6 +64,11 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
       valueGetter: (params: any) => params.data[key],
     }));
   }, [data?.meta]);
+
+  const pinnedBottomRowData = useMemo(
+    () => (data?.totals ? [data.totals] : undefined),
+    [data?.totals]
+  );
 
   // If no data is available yet or still loading
   if (!data || (!data.data && !data.meta && !data.statistics)) {
@@ -116,23 +111,21 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
         <div
           className={`ag-theme-balham w-full overflow-auto ${isFull ? 'h-full flex-1 min-h-0' : ''}`}
           style={isFull ? undefined : { height: containerHeight }}
-          onCopy={handleGridCopy}
+          onCopy={onDataCopy}
         >
           <AgGridReact
+              ref={dataGridRef}
               rowData={data.data || []}
               columnDefs={dataColumnDefs}
-              defaultColDef={defaultColDef}
-              pinnedBottomRowData={data.totals ? [data.totals] : undefined}
-              getRowStyle={(params) =>
-                params.node.rowPinned ? { fontWeight: "bold" } : undefined
-              }
-              modules={[AllCommunityModule]}
+              defaultColDef={DEFAULT_COL_DEF}
+              pinnedBottomRowData={pinnedBottomRowData}
+              getRowStyle={getTotalsRowStyle}
+              modules={GRID_MODULES}
               theme={gridTheme}
               pagination={true}
               paginationPageSize={100}
               enableCellTextSelection={true}
-              suppressRowVirtualisation={true}
-              animateRows={true}
+              ensureDomOrder={true}
               domLayout="normal"
             />
         </div>
@@ -148,13 +141,14 @@ export default function AgTable({ data, height = "350px" }: AgTableProps) {
         <div
           className={`ag-theme-balham w-full overflow-auto ${isFull ? 'h-full flex-1 min-h-0' : ''}`}
           style={isFull ? undefined : { height: containerHeight }}
-          onCopy={handleGridCopy}
+          onCopy={onMetaCopy}
         >
           <AgGridReact
+              ref={metaGridRef}
               rowData={data.meta || []}
               columnDefs={metaColumnDefs}
-              defaultColDef={defaultColDef}
-              modules={[AllCommunityModule]}
+              defaultColDef={DEFAULT_COL_DEF}
+              modules={GRID_MODULES}
               theme={gridTheme}
               pagination={true}
               enableCellTextSelection={true}

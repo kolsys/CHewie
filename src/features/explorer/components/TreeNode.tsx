@@ -1,5 +1,5 @@
 // TreeNode.tsx
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -31,6 +31,7 @@ import {
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { toast } from "sonner";
 import useAppStore from "@/store";
+import { useShallow } from "zustand/react/shallow";
 import { openTableQueryTab } from "@/features/workspace/tableQueryTab";
 
 export interface TreeNodeData {
@@ -49,7 +50,7 @@ interface TreeNodeProps {
   autoExpand?: boolean;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({
+const TreeNodeInner: React.FC<TreeNodeProps> = ({
   node,
   level,
   searchTerm,
@@ -58,12 +59,36 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   autoExpand,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // Every mounted Radix menu adds document-level listeners (and re-adds
+  // pointer listeners on each keydown), so with thousands of expanded rows,
+  // typing anywhere in the app got slow. A row's menus are mounted only once
+  // asked for: the "…" menu on click, the context menu on right-click (it is
+  // mounted next to the row, not around it, so the row is never re-created).
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [contextMenuAt, setContextMenuAt] = useState<{ x: number; y: number } | null>(null);
+  const contextMenuTriggerRef = useRef<HTMLSpanElement>(null);
+
+  // Hand the right-click over to the just-mounted menu so it opens where the
+  // user clicked.
+  useEffect(() => {
+    if (!contextMenuAt) return;
+    contextMenuTriggerRef.current?.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: contextMenuAt.x,
+        clientY: contextMenuAt.y,
+      })
+    );
+  }, [contextMenuAt]);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => Promise<void>>(
     () => async () => {}
   );
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState("");
+  // A narrow selector: subscribing to the whole store re-rendered every
+  // node of the tree (thousands on big servers) on each store change.
   const {
     addTab,
     runQuery,
@@ -74,7 +99,19 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     currentDatabase,
     setCurrentDatabase,
     setExplorerRevealPath,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      addTab: s.addTab,
+      runQuery: s.runQuery,
+      getTabById: s.getTabById,
+      setActiveTab: s.setActiveTab,
+      openCreateTableModal: s.openCreateTableModal,
+      openCreateDatabaseModal: s.openCreateDatabaseModal,
+      currentDatabase: s.currentDatabase,
+      setCurrentDatabase: s.setCurrentDatabase,
+      setExplorerRevealPath: s.setExplorerRevealPath,
+    }))
+  );
 
   useEffect(() => {
     if (autoExpand) {
@@ -354,128 +391,154 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   const shouldRender = !searchTerm || matchesSearch || childrenMatchSearch;
 
-  return shouldRender ? (
-    <>
-      <ContextMenu>
-        <ContextMenuTrigger>
-          <div
-            className={`flex items-center py-1 px-2 hover:bg-secondary hover:rounded-md cursor-pointer truncate
-            ${level > 0 ? "ml-4" : ""}`}
-            onMouseDown={(e) => {
-              // Cmd/Ctrl+click is repurposed below to open "Query Table" —
-              // without this, the browser's native modifier-click handling
-              // ends up selecting the tree's text instead.
-              if (e.metaKey || e.ctrlKey) {
-                e.preventDefault();
-              }
-            }}
-            onClick={(e) => {
-              if (
-                node.type === "table" ||
-                node.type === "view" ||
-                node.type === "dictionary" ||
-                node.type === "materialized_view"
-              ) {
-                e.stopPropagation();
-                if (!parentDatabaseName) {
-                  toast.error("Parent database name is undefined.");
-                } else if (e.metaKey || e.ctrlKey) {
-                  handleQueryData(parentDatabaseName, node.name)();
-                } else {
-                  openInfoTab(parentDatabaseName, node.name);
-                }
-              } else {
-                toggleOpen(e);
-              }
-            }}
-            onDoubleClick={(e) => {
-              if (node.type === "database") {
-                e.stopPropagation();
-                setCurrentDatabase(node.name);
-              }
-            }}
+  if (!shouldRender) return null;
+
+  const menuOptions =
+    contextMenuOptions[node.type as keyof typeof contextMenuOptions];
+
+  const row = (
+    <div
+      className={`flex items-center py-1 px-2 hover:bg-secondary hover:rounded-md cursor-pointer truncate
+      ${level > 0 ? "ml-4" : ""}`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setContextMenuAt({ x: e.clientX, y: e.clientY });
+      }}
+      onMouseDown={(e) => {
+        // Cmd/Ctrl+click is repurposed below to open "Query Table" —
+        // without this, the browser's native modifier-click handling
+        // ends up selecting the tree's text instead.
+        if (e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+        }
+      }}
+      onClick={(e) => {
+        if (
+          node.type === "table" ||
+          node.type === "view" ||
+          node.type === "dictionary" ||
+          node.type === "materialized_view"
+        ) {
+          e.stopPropagation();
+          if (!parentDatabaseName) {
+            toast.error("Parent database name is undefined.");
+          } else if (e.metaKey || e.ctrlKey) {
+            handleQueryData(parentDatabaseName, node.name)();
+          } else {
+            openInfoTab(parentDatabaseName, node.name);
+          }
+        } else {
+          toggleOpen(e);
+        }
+      }}
+      onDoubleClick={(e) => {
+        if (node.type === "database") {
+          e.stopPropagation();
+          setCurrentDatabase(node.name);
+        }
+      }}
+    >
+      <div className="flex-grow flex items-center">
+        {node.children ? (
+          isOpen ? (
+            <ChevronDown className="w-4 h-4 mr-1" />
+          ) : (
+            <ChevronRight className="w-4 h-4 mr-1" />
+          )
+        ) : (
+          <div className="w-6 mr-1" />
+        )}
+        {getIcon}
+        <div
+          className={`text-xs ${
+            node.type === "database" && node.name === currentDatabase
+              ? "font-semibold"
+              : ""
+          }`}
+        >
+          <p className="truncate"> {node.name}</p>
+        </div>
+        {node.type === "database" && node.name === currentDatabase && (
+          <span
+            className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0"
+            title="Current database"
+          />
+        )}
+      </div>
+      <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+        {isDropdownOpen ? (
+          <DropdownMenu open onOpenChange={setIsDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-6 w-6">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {menuOptions.map((option, index) => (
+                <DropdownMenuItem key={index} onSelect={option.action}>
+                  {option.icon}
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => setIsDropdownOpen(true)}
           >
-            <div className="flex-grow flex items-center">
-              {node.children ? (
-                isOpen ? (
-                  <ChevronDown className="w-4 h-4 mr-1" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 mr-1" />
-                )
-              ) : (
-                <div className="w-6 mr-1" />
-              )}
-              {getIcon}
-              <div
-                className={`text-xs ${
-                  node.type === "database" && node.name === currentDatabase
-                    ? "font-semibold"
-                    : ""
-                }`}
-              >
-                <p className="truncate"> {node.name}</p>
-              </div>
-              {node.type === "database" && node.name === currentDatabase && (
-                <span
-                  className="ml-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0"
-                  title="Current database"
-                />
-              )}
-            </div>
-            <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-6 w-6">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {contextMenuOptions[
-                    node.type as keyof typeof contextMenuOptions
-                  ].map((option, index) => (
-                    <DropdownMenuItem key={index} onSelect={option.action}>
-                      {option.icon}
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          {contextMenuOptions[node.type as keyof typeof contextMenuOptions].map(
-            (option, index) => (
+            <MoreVertical className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <span>{row}</span>
+      {contextMenuAt && (
+        <ContextMenu
+          modal={false}
+          onOpenChange={(open) => {
+            if (!open) setContextMenuAt(null);
+          }}
+        >
+          <ContextMenuTrigger ref={contextMenuTriggerRef} className="hidden" />
+          <ContextMenuContent>
+            {menuOptions.map((option, index) => (
               <ContextMenuItem key={index} onSelect={option.action}>
                 {option.icon}
                 {option.label}
               </ContextMenuItem>
-            )
+            ))}
+          </ContextMenuContent>
+        </ContextMenu>
+      )}
+      {(isOpen || searchTerm) && node.children && (
+        <div>
+          {node.children.length > 0 ? (
+            node.children.map((child, index) => (
+              <TreeNode
+                key={index}
+                node={child}
+                level={level + 1}
+                searchTerm={searchTerm}
+                parentDatabaseName={
+                  node.type === "database" ? node.name : parentDatabaseName
+                }
+                refreshData={refreshData}
+              />
+            ))
+          ) : (
+            <div className="ml-6 pl-4 text-xs italic text-muted-foreground">
+              Nothing to show
+            </div>
           )}
-        </ContextMenuContent>
-        {(isOpen || searchTerm) && node.children && (
-          <div>
-            {node.children.length > 0 ? (
-              node.children.map((child, index) => (
-                <TreeNode
-                  key={index}
-                  node={child}
-                  level={level + 1}
-                  searchTerm={searchTerm}
-                  parentDatabaseName={
-                    node.type === "database" ? node.name : parentDatabaseName
-                  }
-                  refreshData={refreshData}
-                />
-              ))
-            ) : (
-              <div className="ml-6 pl-4 text-xs italic text-muted-foreground">
-                Nothing to show
-              </div>
-            )}
-          </div>
-        )}
-      </ContextMenu>
+        </div>
+      )}
       <ConfirmationDialog
         isOpen={isConfirmDialogOpen}
         variant="danger"
@@ -490,7 +553,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         cancelText="Cancel"
       />
     </>
-  ) : null;
+  );
 };
+
+// Memoized (children render through it too): node props are stable, so
+// unrelated parent re-renders skip the whole subtree.
+const TreeNode = React.memo(TreeNodeInner);
 
 export default TreeNode;

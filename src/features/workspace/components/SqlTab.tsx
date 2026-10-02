@@ -1,9 +1,15 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2, FileX2 } from "lucide-react";
 import { AgGridReact } from "ag-grid-react";
-import { ColDef, AllCommunityModule, ICellRendererParams } from "ag-grid-community";
-import { themeBalham, colorSchemeDark } from "ag-grid-community";
+import { ColDef } from "ag-grid-community";
+import {
+  DEFAULT_COL_DEF,
+  GRID_MODULES,
+  GRID_THEME_DARK,
+  GRID_THEME_LIGHT,
+  getTotalsRowStyle,
+} from "@/lib/gridDefaults";
 
 // Component imports
 import SQLEditor from "@/features/workspace/editor/SqlEditor";
@@ -21,7 +27,7 @@ import DownloadDialog, {
 } from "@/components/common/DownloadDialog";
 import EmptyQueryResult from "./EmptyQueryResult";
 import StatisticsDisplay from "./StatisticsDisplay";
-import { handleGridCopy } from "@/lib/gridClipboard";
+import { createGridCopyHandler } from "@/lib/gridClipboard";
 import ChartColumnHeader, {
   ChartColumnHeaderParams,
 } from "@/features/workspace/chart/ChartColumnHeader";
@@ -41,19 +47,10 @@ interface IRow {
   [key: string]: any;
 }
 
-// Cell renderer that formats objects/null specially and renders everything
-// else as plain text (avoids dangerouslySetInnerHTML, which used to run every
-// cell value through the browser's HTML parser).
-const CustomCellRenderer = (props: ICellRendererParams) => {
-  const { value } = props;
-  if (value === null || value === undefined) {
-    return <em>null</em>;
-  }
-  if (typeof value === "object") {
-    return <span style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(value, null, 2)}</span>;
-  }
-  return <>{String(value)}</>;
-};
+const META_COLUMN_DEFS: ColDef[] = [
+  { headerName: "Column Name", field: "name", flex: 1 },
+  { headerName: "Data Type", field: "type", flex: 1 },
+];
 
 /**
  * SqlTab component that provides a SQL editor and result viewer
@@ -68,21 +65,18 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("results");
 
-  // Configure AG Grid theme based on app theme
-  const gridTheme =
-    theme === "light" ? themeBalham : themeBalham.withPart(colorSchemeDark);
+  const gridTheme = theme === "light" ? GRID_THEME_LIGHT : GRID_THEME_DARK;
 
-  // AG Grid configuration
-  const defaultColDef: ColDef = {
-    flex: 1,
-    minWidth: 130,
-    sortable: true,
-    filter: true,
-    resizable: true,
-    filterParams: { buttons: ["reset", "apply"] },
-    cellRenderer: CustomCellRenderer,
-    autoHeight: true,
-  };
+  const resultsGridRef = useRef<AgGridReact<IRow>>(null);
+  const metaGridRef = useRef<AgGridReact>(null);
+  const onResultsCopy = useMemo(
+    () => createGridCopyHandler(() => resultsGridRef.current?.api),
+    []
+  );
+  const onMetaCopy = useMemo(
+    () => createGridCopyHandler(() => metaGridRef.current?.api),
+    []
+  );
 
   const [columnDefs, setColumnDefs] = useState<ColDef<IRow>[]>([]);
   const [rowData, setRowData] = useState<IRow[]>([]);
@@ -163,6 +157,12 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
     }
   }, [tab?.result?.data, tab?.result?.meta, tabId]);
 
+  const totals = tab?.result?.totals;
+  const pinnedBottomRowData = useMemo(
+    () => (totals ? [totals] : undefined),
+    [totals]
+  );
+
   const chartConfig = tab?.chart;
   const handleChartChange = useCallback(
     (chart: ChartConfig) => updateTab(tabId, { chart }),
@@ -219,22 +219,22 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1" onCopy={handleGridCopy}>
+        <div className="flex-1" onCopy={onResultsCopy}>
           <AgGridReact
+            ref={resultsGridRef}
             rowData={rowData}
             columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            pinnedBottomRowData={tab?.result?.totals ? [tab.result.totals] : undefined}
-            getRowStyle={(params) =>
-              params.node.rowPinned ? { fontWeight: "bold" } : undefined
-            }
-            modules={[AllCommunityModule]}
+            defaultColDef={DEFAULT_COL_DEF}
+            pinnedBottomRowData={pinnedBottomRowData}
+            getRowStyle={getTotalsRowStyle}
+            modules={GRID_MODULES}
             theme={gridTheme}
             pagination={true}
             paginationPageSize={100}
             enableCellTextSelection={true}
-            suppressRowVirtualisation={true}
-            animateRows={true}
+            // Rendered rows stay in display order so a text selection can be
+            // mapped back to a row/column range (see gridClipboard.ts)
+            ensureDomOrder={true}
             suppressMovableColumns={false}
           />
         </div>
@@ -247,15 +247,13 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
 
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1" onCopy={handleGridCopy}>
+        <div className="flex-1" onCopy={onMetaCopy}>
           <AgGridReact
+            ref={metaGridRef}
             rowData={tab.result.meta}
-            columnDefs={[
-              { headerName: "Column Name", field: "name", flex: 1 },
-              { headerName: "Data Type", field: "type", flex: 1 },
-            ]}
-            defaultColDef={defaultColDef}
-            modules={[AllCommunityModule]}
+            columnDefs={META_COLUMN_DEFS}
+            defaultColDef={DEFAULT_COL_DEF}
+            modules={GRID_MODULES}
             theme={gridTheme}
             pagination={true}
             enableCellTextSelection={true}
@@ -332,7 +330,13 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
           )}
         </TabsList>
         <div className="flex-1 min-h-0">
-          <TabsContent value="results" className="h-full m-0">
+          {/* Kept mounted while other tabs are shown: rebuilding the grid on
+              every switch was slow and dropped its sort/filter state. */}
+          <TabsContent
+            value="results"
+            forceMount
+            className="h-full m-0 data-[state=inactive]:hidden"
+          >
             {renderResultsTab()}
           </TabsContent>
           <TabsContent value="metadata" className="h-full m-0">
