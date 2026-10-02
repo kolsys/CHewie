@@ -23,25 +23,58 @@ interface UPlotChartProps {
   height?: number | string;
   showLegend?: boolean;
   showTooltip?: boolean;
+  // Draw lines across missing (null) points instead of breaking them
+  spanGaps?: boolean;
 }
+
+// Shared defaults: fresh `{}` literals would change identity every render and
+// rebuild (destroy + recreate) the chart each time.
+const NO_STRINGS: Record<string, string> = {};
+const NO_NUMBERS: Record<string, number> = {};
+
+const barYRange: uPlot.Range.Function = (_u, min, max) => {
+  if (min == null || max == null) return [0, 1];
+  const lo = Math.min(0, min);
+  const hi = Math.max(0, max);
+  if (lo === hi) return [0, 1];
+  const pad = (hi - lo) * 0.05;
+  return [lo < 0 ? lo - pad : 0, hi > 0 ? hi + pad : 0];
+};
+
+const ordinalSplits = (
+  _u: uPlot,
+  _axisIdx: number,
+  min: number,
+  max: number,
+  incr: number
+): number[] => {
+  const step = Math.max(1, Math.round(incr));
+  const splits: number[] = [];
+  for (let i = Math.ceil(min); i <= max; i += step) splits.push(i);
+  return splits;
+};
 
 const UPlotChart: React.FC<UPlotChartProps> = ({
   data,
   chartType = "line",
   indexBy,
   series,
-  labels = {},
-  colors = {},
+  labels = NO_STRINGS,
+  colors = NO_STRINGS,
   isDateTime = false,
   height = 250,
   showLegend = false,
   showTooltip = true,
-  seriesUnits = {},
-  seriesDecimals = {},
+  seriesUnits = NO_STRINGS,
+  seriesDecimals = NO_NUMBERS,
+  spanGaps = false,
 }) => {
   const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const chartTheme = {
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const chartTheme = useMemo(() => ({
     axis: {
       stroke: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.45)",
       font: "11px Inter, system-ui, -apple-system, sans-serif",
@@ -59,7 +92,7 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
       textColor: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
       borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.3)",
     },
-  };
+  }), [isDark]);
 
   function colorWithAlpha(color: string, alpha: number): string {
     const c = color;
@@ -186,19 +219,16 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
     seriesCount: number
   ): uPlot.Series["paths"] {
     return (u, sidx, idx0, idx1) => {
-      const x = u.data[0] as number[];
       const y = u.data[sidx] as (number | null)[];
 
-      const px = (val: number) => u.valToPos(val, "x", true);
+      // Bar charts use an ordinal x scale (distr 2), which positions points by
+      // data index rather than by x value (e.g. epoch seconds on a time axis).
+      const px = (idx: number) => u.valToPos(idx, "x", true);
       const py = (val: number) => u.valToPos(val, "y", true);
 
       // estimate step in pixels
-      let step = 10;
-      if (x.length > 1) {
-        const x0 = px(x[0]);
-        const x1 = px(x[1]);
-        step = Math.abs(x1 - x0);
-      }
+      const step =
+        y.length > 1 ? Math.abs(px(1) - px(0)) : u.bbox.width / 2;
       const gap = 0.2; // 20% gap of step
       const fullBar = Math.max(1, Math.floor(step * (1 - gap)));
       const barW = Math.max(1, Math.floor(fullBar / seriesCount));
@@ -211,7 +241,7 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
       for (let i = idx0; i <= idx1; i++) {
         const yi = y[i];
         if (yi == null) continue;
-        const xv = px(x[i]) + offset;
+        const xv = px(i) + offset;
         const y0 = py(0);
         const yv = py(yi);
         const top = Math.min(y0, yv);
@@ -277,7 +307,7 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
           width: 2,
           scale: "y",
           show: true,
-          spanGaps: false,
+          spanGaps,
           points: {
             show: chartTheme.series.points.show,
           },
@@ -317,13 +347,23 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
         x: {
           time: isDateTime,
           ...(isCategorical || chartType === "bar" ? { distr: 2 as any } : {}),
+          // Ordinal range is in indices: half a step of room on each side so
+          // the first and last bars aren't cut in half
+          ...(chartType === "bar"
+            ? { range: (_u: uPlot, min: number, max: number) => [min - 0.5, max + 0.5] as uPlot.Range.MinMax }
+            : {}),
         },
         y: {
           auto: true,
+          // Bars are read by their length, so the axis has to include zero
+          ...(chartType === "bar" ? { range: barYRange } : {}),
         },
       },
       axes: [
         {
+          // With the padded bar range, uPlot would put the first tick on the
+          // -0.5 edge (no data point there); tick whole indices only.
+          ...(chartType === "bar" ? { splits: ordinalSplits } : {}),
           stroke: chartTheme.axis.stroke,
           font: chartTheme.axis.font,
           size: 55,
@@ -408,6 +448,8 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
     isCategorical,
     categories,
     seriesUnits,
+    seriesDecimals,
+    spanGaps,
   ]);
 
   if (!data || data.length === 0 || plotData[0].length === 0) {

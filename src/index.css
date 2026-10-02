@@ -297,3 +297,54 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Chart button in SQL result grid headers (ChartColumnHeader), placed
+   between the column label and the grid's filter button. */
+.chart-column-header-slot {
+  display: inline-flex;
+  flex: none;
+  margin: 0 6px 0 4px;
+}
+/* Same box, colors and active look as the grid's own filter button */
+.chart-column-header-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ag-icon-size);
+  height: var(--ag-icon-size);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  color: var(--ag-icon-button-color);
+  background-color: var(--ag-icon-button-background-color);
+  border-radius: var(--ag-icon-button-border-radius);
+  box-shadow: 0 0 0 var(--ag-icon-button-background-spread)
+    var(--ag-icon-button-background-color);
+}
+.chart-column-header-button:hover {
+  color: var(--ag-icon-button-hover-color);
+  background-color: var(--ag-icon-button-hover-background-color);
+  box-shadow: 0 0 0 var(--ag-icon-button-background-spread)
+    var(--ag-icon-button-hover-background-color);
+}
+/* Picked: looks like the active workspace tab (solid orange, primary text) */
+.chart-column-header-button[data-active],
+.chart-column-header-button[data-active]:hover {
+  color: var(--primary);
+  background-color: var(--color-orange-500, #f97316);
+  box-shadow: 0 0 0 var(--ag-icon-button-background-spread)
+    var(--color-orange-500, #f97316);
+}
+/* Lucide glyphs fill ~20/24 of their box, the grid's ~10/16: at 75% of the
+   grid icon size they come out the same ~10px as the filter funnel. */
+.chart-column-header-button svg {
+  width: calc(var(--ag-icon-size) * 0.75);
+  height: calc(var(--ag-icon-size) * 0.75);
+}
+
+/* Result Chart tab: uplot.css pins the plot to 100% of the chart container,
+   which pushes the legend out of view; let the plot flex next to it instead. */
+.result-chart-plot .uplot-container > div:first-child {
+  height: auto !important;
+}

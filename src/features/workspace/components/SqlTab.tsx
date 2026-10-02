@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, FileX2 } from "lucide-react";
 import { AgGridReact } from "ag-grid-react";
@@ -22,6 +22,12 @@ import DownloadDialog, {
 import EmptyQueryResult from "./EmptyQueryResult";
 import StatisticsDisplay from "./StatisticsDisplay";
 import { handleGridCopy } from "@/lib/gridClipboard";
+import ChartColumnHeader, {
+  ChartColumnHeaderParams,
+} from "@/features/workspace/chart/ChartColumnHeader";
+import ResultChart from "@/features/workspace/chart/ResultChart";
+import { ChartConfig, effectiveColumns } from "@/features/workspace/chart/chartModel";
+import { syncTabChartWithResult } from "@/features/workspace/chart/tabChart";
 
 // Store
 import useAppStore from "@/store";
@@ -56,7 +62,8 @@ const CustomCellRenderer = (props: ICellRendererParams) => {
  * query results, metadata, and statistics tabs on the bottom.
  */
 const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
-  const { getTabById, runQuery, fetchDatabaseInfo, runQueryWithFormat } = useAppStore();
+  const { getTabById, runQuery, fetchDatabaseInfo, runQueryWithFormat, updateTab } =
+    useAppStore();
   const tab = getTabById(tabId);
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<string>("results");
@@ -109,6 +116,15 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
         const shouldRefresh = isSchemaModifyingQuery(query);
         const result = await runQuery(query, tabId);
 
+        if (!result.error) {
+          const dropped = syncTabChartWithResult(tabId, result.meta);
+          if (dropped.length) {
+            toast.info(
+              `Removed from chart (not in the new result): ${dropped.join(", ")}`
+            );
+          }
+        }
+
         if (!result.error && shouldRefresh) {
           await fetchDatabaseInfo();
           toast.success("Data Explorer refreshed due to schema change");
@@ -129,6 +145,14 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
       const colDefs: ColDef<IRow>[] = tab.result.meta.map((col: any) => ({
         headerName: col.name,
         valueGetter: (param: any) => param.data[col.name],
+        headerComponentParams: {
+          innerHeaderComponent: ChartColumnHeader,
+          innerHeaderComponentParams: {
+            tabId,
+            columnName: col.name,
+            columnType: col.type,
+          } satisfies ChartColumnHeaderParams,
+        },
       }));
 
       setRowData(tab.result.data);
@@ -137,7 +161,26 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
       setColumnDefs([]);
       setRowData([]);
     }
-  }, [tab?.result?.data, tab?.result?.meta]);
+  }, [tab?.result?.data, tab?.result?.meta, tabId]);
+
+  const chartConfig = tab?.chart;
+  const handleChartChange = useCallback(
+    (chart: ChartConfig) => updateTab(tabId, { chart }),
+    [updateTab, tabId]
+  );
+
+  // The Chart tab exists only while some picked column is in the result
+  const chartColumnCount = tab?.result?.data?.length
+    ? effectiveColumns(chartConfig, tab.result.meta).length
+    : 0;
+
+  // When the chart falls apart (e.g. a new query lost its columns), really
+  // leave the tab; otherwise picking the first new column would jump back.
+  useEffect(() => {
+    if (activeTab === "chart" && !chartColumnCount && !tab?.isLoading) {
+      setActiveTab("results");
+    }
+  }, [activeTab, chartColumnCount, tab?.isLoading]);
 
   // UI rendering functions
   const renderLoading = () => (
@@ -227,13 +270,28 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
     return <StatisticsDisplay statistics={tab.result.statistics} />;
   };
 
+  const renderChartTab = () => {
+    if (!chartConfig) return null;
+    return (
+      <ResultChart
+        tabId={tabId}
+        data={tab?.result?.data ?? []}
+        meta={tab?.result?.meta ?? []}
+        config={chartConfig}
+        onChange={handleChartChange}
+      />
+    );
+  };
+
   const renderResultTabs = () => {
     const hasData = tab?.result?.data?.length > 0;
     const hasMeta = tab?.result?.meta?.length > 0;
+    const currentTab =
+      activeTab === "chart" && !chartColumnCount ? "results" : activeTab;
 
     return (
       <Tabs
-        value={activeTab}
+        value={currentTab}
         onValueChange={setActiveTab}
         className="h-full flex flex-col"
       >
@@ -264,8 +322,16 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
             )}
           </TabsTrigger>
           <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          {chartColumnCount > 0 && (
+            <TabsTrigger value="chart">
+              Chart
+              <span className="ml-2 text-muted-foreground">
+                ({chartColumnCount} {chartColumnCount === 1 ? "column" : "columns"})
+              </span>
+            </TabsTrigger>
+          )}
         </TabsList>
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           <TabsContent value="results" className="h-full m-0">
             {renderResultsTab()}
           </TabsContent>
@@ -275,6 +341,11 @@ const SqlTab: React.FC<SqlTabProps> = ({ tabId }) => {
           <TabsContent value="statistics" className="h-full m-0">
             {renderStatisticsResults()}
           </TabsContent>
+          {chartColumnCount > 0 && (
+            <TabsContent value="chart" className="h-full m-0">
+              {renderChartTab()}
+            </TabsContent>
+          )}
         </div>
       </Tabs>
     );

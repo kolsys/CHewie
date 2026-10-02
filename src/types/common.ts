@@ -3,6 +3,7 @@ import {
   ClickHouseSettings as ClickHouseSettingsType,
   ClickHouseClient,
 } from "@clickhouse/client-web";
+import type { ChartConfig } from "@/features/workspace/chart/chartModel";
 export type ClickHouseSettings = ClickHouseSettingsType;
 
 export interface Credential {
@@ -43,6 +44,8 @@ interface Tab {
   isSaved?: boolean;
   result?: any;
   isDirty?: boolean;
+  // Columns picked for the result's Chart tab (persisted with the tab)
+  chart?: ChartConfig;
 }
 
 export interface SavedQuery {
