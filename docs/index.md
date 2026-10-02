@@ -30,4 +30,5 @@ This directory documents the base functionality CHewie inherits from the origina
   <img src="public/screenshots/screenshot8.png" width="45%" />
   <img src="public/screenshots/screenshot9.png" width="45%" />
   <img src="public/screenshots/screenshot10.png" width="45%" />
+  <img src="public/screenshots/screenshot11.png" width="45%" />
 </div>

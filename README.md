@@ -19,6 +19,7 @@ A modern, feature-rich web interface for ClickHouse databases. CHewie provides a
 - **`WITH TOTALS` Support**: Totals rows now render as a pinned, bold row at the bottom of the results grid and are included in CSV/JSON/clipboard exports.
 - **Clipboard-Friendly Results Grid**: Select a range of rows and copy — pasting into Google Sheets/Docs (or Excel) now lands in proper columns instead of a single cell, with reliable multi-row text selection on large result sets.
 - **Faster Table Navigation**: Cmd-click (macOS) / Ctrl-click (Windows/Linux) a table in the Explorer to jump straight into a `SELECT *` query tab, skipping the info page.
+- **Charts from Query Results**: Pick result columns with the chart button in their headers — as the time axis, a measure, or a dimension (numeric columns too) — and a **Chart** tab plots them as a line, area or bar chart, one series per dimension value. The chart follows your next query and drops columns it no longer returns.
 
 ## Key Features
 
@@ -76,10 +77,11 @@ A modern, feature-rich web interface for ClickHouse databases. CHewie provides a
 ## Screenshots
 
 <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-  <img src="./docs/public/screenshots/screenshot1.png" alt="Main Dashboard" width="24%" />
-  <img src="./docs/public/screenshots/screenshot2.png" alt="Query Interface" width="24%" />
-  <img src="./docs/public/screenshots/screenshot8.png" alt="Instance Metrics" width="24%" />
-  <img src="./docs/public/screenshots/screenshot9.png" alt="Query Metrics" width="24%" />
+  <img src="./docs/public/screenshots/screenshot1.png" alt="Main Dashboard" width="19%" />
+  <img src="./docs/public/screenshots/screenshot2.png" alt="Query Interface" width="19%" />
+  <img src="./docs/public/screenshots/screenshot11.png" alt="Query Result Chart" width="19%" />
+  <img src="./docs/public/screenshots/screenshot8.png" alt="Instance Metrics" width="19%" />
+  <img src="./docs/public/screenshots/screenshot9.png" alt="Query Metrics" width="19%" />
 </div>
 
 ## Getting Started
