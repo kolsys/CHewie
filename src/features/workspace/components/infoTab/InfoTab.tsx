@@ -9,8 +9,10 @@ import {
   ChevronRight,
   Table,
   Share2,
+  TerminalIcon,
 } from "lucide-react";
 import useAppStore from "@/store";
+import { openTableQueryTab } from "@/features/workspace/tableQueryTab";
 import LoadingOverlay from "./LoadingOverlay";
 import OverviewCards from "./OverviewCards";
 import DetailsContent from "./DetailsContent";
@@ -181,16 +183,28 @@ const InfoTab: React.FC<InfoTabProps> = ({ database, tableName }) => {
           </p>
         </div>
       </div>
-      <button
-        onClick={refreshData}
-        className="flex items-center space-x-2 px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isRefreshing || loading}
-      >
-        <RefreshCcw
-          className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-        />
-        <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
-      </button>
+      <div className="flex items-center gap-2">
+        {tableName && (
+          <button
+            onClick={() => openTableQueryTab(database, tableName)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-all"
+            title="Open a query tab for this table"
+          >
+            <TerminalIcon className="w-4 h-4" />
+            <span>Query</span>
+          </button>
+        )}
+        <button
+          onClick={refreshData}
+          className="flex items-center space-x-2 px-4 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isRefreshing || loading}
+        >
+          <RefreshCcw
+            className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>
+        </button>
+      </div>
     </header>
   );
 

@@ -31,6 +31,7 @@ import {
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { toast } from "sonner";
 import useAppStore from "@/store";
+import { openTableQueryTab } from "@/features/workspace/tableQueryTab";
 
 export interface TreeNodeData {
   name: string;
@@ -106,23 +107,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   };
 
   const handleQueryData = useCallback(
-    (database: string, table: string) => async () => {
-      const query = `SELECT * FROM \`${database}\`.\`${table}\` LIMIT 1000`;
-      const title = `Query - ${table}`;
-      const existingTab = getTabById(title);
-
-      if (existingTab) {
-        toast.warning("A tab with this query is already open");
-      } else {
-        addTab({
-          id: `query-${table}`,
-          type: "sql",
-          title: title,
-          content: `-- ${title}\n${query}`,
-        });
-      }
-    },
-    [addTab, getTabById]
+    (database: string, table: string) => () =>
+      openTableQueryTab(database, table),
+    []
   );
 
   const getIcon = useMemo(() => {
