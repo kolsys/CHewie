@@ -213,6 +213,19 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
     return [alignedX, ...alignedY];
   }, [data, indexBy, series, isDateTime, isCategorical]);
 
+  // Daily data (Date columns, toStartOfDay) has every point at local midnight;
+  // the time of day is just noise in axis labels and the tooltip then.
+  const dateOnly = useMemo(
+    () =>
+      isDateTime &&
+      plotData[0].length > 0 &&
+      (plotData[0] as number[]).every((v) => {
+        const d = new Date(v * 1000);
+        return d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0;
+      }),
+    [isDateTime, plotData]
+  );
+
   // Bar paths helper for grouped bars
   function makeBarPaths(
     seriesIdx: number,
@@ -276,7 +289,9 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
             if (isDateTime) {
               const ts = Number(u.data[0][idx]) * 1000;
               const d = new Date(ts);
-              return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+              return dateOnly
+                ? d.toLocaleDateString()
+                : `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
             }
             if (isCategorical && categories[idx] != null) {
               return categories[idx];
@@ -382,6 +397,7 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
                   return vals.map((v, i) => {
                     if (i % skip !== 0) return "";
                     const d = new Date(v * 1000);
+                    if (dateOnly) return d.toLocaleDateString();
                     return showDate
                       ? `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {
                           hour: "2-digit",
@@ -441,6 +457,7 @@ const UPlotChart: React.FC<UPlotChartProps> = ({
     colors,
     chartType,
     isDateTime,
+    dateOnly,
     height,
     chartTheme,
     showLegend,
