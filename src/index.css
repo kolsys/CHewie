@@ -353,3 +353,23 @@
 .ag-cell.grid-cell-null {
   font-style: italic;
 }
+/* AG Grid clips cell text with `overflow: hidden`, which makes every cell
+   value a scroll container: Chrome latches a horizontal wheel/trackpad
+   gesture onto the (unscrollable) text under the pointer, so sideways
+   scrolling only worked over the scrollbar or cell padding. `overflow: clip`
+   clips and keeps the ellipsis without that; `min-width: 0` stops the flex
+   item from growing to fit its text. */
+.ag-root .ag-cell-value:not(.ag-allow-overflow) {
+  overflow: clip;
+  min-width: 0;
+}
+/* No horizontal rubber-band: the bounce isn't reflected in scrollLeft, which
+   is what the grid syncs the header and pinned rows from, so the body
+   visibly drifted away from them. Also stops the browser's swipe-to-go-back. */
+.ag-root .ag-center-cols-viewport,
+.ag-root .ag-header-viewport,
+.ag-root .ag-floating-top-viewport,
+.ag-root .ag-floating-bottom-viewport,
+.ag-root .ag-body-horizontal-scroll-viewport {
+  overscroll-behavior-x: none;
+}
