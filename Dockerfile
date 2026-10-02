@@ -1,8 +1,7 @@
-# Bun-optimized Dockerfile for CHewie
-# Using Bun for faster builds and smaller images
+# Dockerfile for CHewie
 
 # Build stage
-FROM oven/bun:latest AS build
+FROM node:22-alpine AS build
 
 # Build arguments - declare at the top
 ARG VERSION=dev
@@ -13,19 +12,19 @@ ARG BUILD_DATE=unknown
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lock ./
+COPY package.json package-lock.json ./
 
-# Install dependencies using Bun (much faster than npm)
-RUN bun install --frozen-lockfile
+# Install exactly what package-lock.json pins (fails if it's out of sync)
+RUN npm ci
 
 # Copy application source
 COPY . .
 
-# Build the application using Bun
-RUN bun run build
+# Build the application
+RUN npm run build
 
 # Runtime stage
-FROM oven/bun:1-alpine AS runtime
+FROM node:22-alpine AS runtime
 
 # Install CA certificates for proxy/corporate environments
 RUN apk add --no-cache ca-certificates && update-ca-certificates
@@ -44,14 +43,14 @@ COPY --from=build /app/dist /app
 # Copy environment injection script
 COPY inject-env.cjs /app/inject-env.cjs
 
-# Install serve locally in /app (pinned version for reproducibility)
-RUN bun add serve@14.2.5
+# Install serve globally (pinned version for reproducibility)
+RUN npm install -g serve@14.2.5 && npm cache clean --force
 
 # Create non-root user
 RUN addgroup -S chewie-group -g 1001 && \
     adduser -S chewie-user -u 1001 -G chewie-group
 
-# Set ownership (includes node_modules with serve)
+# Set ownership (inject-env.cjs rewrites index.html at startup)
 RUN chown -R chewie-user:chewie-group /app
 
 # Add metadata labels
@@ -92,4 +91,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # of large bundles through them. Serving raw files with a fixed Content-Length
 # is far more broadly compatible; let the reverse proxy/LB in front of this
 # container do its own (gzip) compression if needed.
-CMD ["/bin/sh", "-c", "bun run /app/inject-env.cjs && ./node_modules/.bin/serve -u -s -l 5521 /app"]
+CMD ["/bin/sh", "-c", "node /app/inject-env.cjs && serve -u -s -l 5521 /app"]

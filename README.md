@@ -422,16 +422,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 # Clone and install
 git clone https://github.com/kolsys/chewie.git
 cd chewie
-bun install
+npm install
 
 # Run tests
-bun run test
+npm test
 
 # Run linter
-bun run lint
+npm run lint
 
 # Start development server
-bun run dev
+npm run dev
 ```
 
 ## License

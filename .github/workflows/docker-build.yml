@@ -46,10 +46,7 @@ jobs:
       - name: Determine build configuration
         id: build_config
         run: |
-          # Using Bun Dockerfile
           echo "dockerfile=Dockerfile" >> $GITHUB_OUTPUT
-          echo "variant=bun" >> $GITHUB_OUTPUT
-          echo "📦 Using Bun Dockerfile for faster builds"
 
           # Version comes from the pushed tag (e.g. v1.2.3 -> 1.2.3)
           VERSION="${GITHUB_REF_NAME#v}"
@@ -163,7 +160,6 @@ jobs:
           echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Tag | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Version | \`${{ steps.build_config.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Variant | \`${{ steps.build_config.outputs.variant }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Platforms | \`linux/amd64, linux/arm64\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Registry | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
